@@ -1,0 +1,103 @@
+@import 'tailwindcss';
+
+:root {
+  --background: #fef8f7;
+  --foreground: #333333;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+}
+
+img {
+  display: block;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  pointer-events: auto;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Enhanced global styles for headings, cards, and micro-interactions */
+h1 {
+  font-size: 2.25rem;
+  line-height: 1.05;
+  font-weight: 700;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(8px) scale(0.997);
+}
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 420ms ease, transform 420ms cubic-bezier(.2,.8,.2,1);
+}
+
+/* Muted text for better contrast */
+.text-muted { color: #666666; }
+
+/* Cart pulse animation */
+.cart-pulse { animation: cartPulse 560ms cubic-bezier(.2,.8,.2,1); }
+@keyframes cartPulse { 0%{ transform: scale(1) } 50%{ transform: scale(1.14) } 100%{ transform: scale(1) } }
+
+/* Product card hover */
+.product-card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(11,16,25,0.08);
+}
+
+/* Add-to-cart visual confirmation */
+.btn-added {
+  animation: btnPop 540ms ease forwards;
+}
+@keyframes btnPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Delivery animation styles */
+.delivery-animation { width: 100%; max-width: 480px; }
+.truck-shell { position: relative; width: 220px; height: 80px; }
+.truck-cab { position: absolute; left: 0; top: 18px; width: 72px; height: 44px; background: #ff5722; border-radius: 8px 0 0 8px; }
+.truck-window { width: 30px; height: 18px; background: rgba(255,255,255,0.7); margin: 6px 0 0 8px; border-radius: 3px; }
+.truck-body { position: absolute; left: 72px; top: 8px; width: 128px; height: 64px; background: #ffece6; border-radius: 8px; }
+.truck-wheel { position: absolute; bottom: 0; width: 28px; height: 28px; background: #222; border-radius: 50%; }
+.truck-wheel-front { left: 30px; animation: wheelSpin 1s linear infinite; }
+.truck-wheel-rear { right: 18px; animation: wheelSpin 1s linear infinite; }
+@keyframes wheelSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.delivery-path { display:flex; gap:8px; margin-left:18px; }
+.delivery-dot { width:8px; height:8px; background:#ff5722; border-radius:50%; opacity:0.35; animation: dotMove 1.2s linear infinite; }
+@keyframes dotMove { 0%{opacity:0.2}50%{opacity:1}100%{opacity:0.2} }
