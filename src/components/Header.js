@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { useStore } from '@/context/StoreProvider';
 
 const navItems = [
+  { href: '/', label: 'Home' },
   { href: '/about', label: 'About' },
   { href: '/products', label: 'Products' },
   { href: '/blog', label: 'Blog' },
@@ -16,7 +17,9 @@ const navItems = [
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { cartCount, wishlistCount } = useStore();
+  const pendingHomeScrollRef = useRef(false);
 
   // Prevent hydration mismatch: server renders 0, so initialize to 0
   const [cartCountClient, setCartCountClient] = useState(0);
@@ -26,6 +29,15 @@ export default function Header() {
     // sync client-only counts after mount
     setCartCountClient(cartCount ?? 0);
   }, [cartCount]);
+
+  useEffect(() => {
+    if (pathname !== '/' || !pendingHomeScrollRef.current) return;
+
+    pendingHomeScrollRef.current = false;
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }, [pathname]);
 
   useEffect(() => {
     setWishlistCountClient(wishlistCount ?? 0);
@@ -43,6 +55,33 @@ export default function Header() {
     prevCartRef.current = cartCount ?? 0;
   }, [cartCount]);
 
+  const handleHomeClick = (event) => {
+    event.preventDefault();
+
+    if (pathname === '/') {
+      window.history.replaceState(null, '', '/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    pendingHomeScrollRef.current = true;
+    router.push('/');
+  };
+
+  const handleReviewsClick = (event) => {
+    event.preventDefault();
+
+    if (pathname !== '/') {
+      router.push('/#reviews');
+      return;
+    }
+
+    window.history.pushState(null, '', '/#reviews');
+    window.requestAnimationFrame(() => {
+      document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
   return (
     <header className="sticky top-0 z-50 border-b border-[#f0e4df] bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
@@ -58,11 +97,17 @@ export default function Header() {
 
         <nav className="hidden items-center gap-6 md:flex">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+            const itemPath = item.href.split('#')[0] || '/';
+            const isActive = item.href.includes('#')
+              ? false
+              : itemPath === '/'
+                ? pathname === '/'
+                : pathname === itemPath || pathname.startsWith(`${itemPath}/`);
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={item.label === 'Home' ? handleHomeClick : item.label === 'Reviews' ? handleReviewsClick : undefined}
                 className={`text-sm font-semibold transition ${
                   isActive ? 'text-[#ff5722]' : 'text-[#333] hover:text-[#ff5722]'
                 }`}

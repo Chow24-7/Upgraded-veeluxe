@@ -16,7 +16,7 @@ export default function ProductPage({ params }) {
   const related = products.filter((p) => p.id !== id).slice(0, 4);
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-28">
+    <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
       <PageSection>
         <div className="grid gap-8 lg:grid-cols-[1fr_0.8fr]">
           <div className="overflow-hidden rounded-[18px] border border-[#f2e7e2] bg-white p-6">
@@ -25,7 +25,7 @@ export default function ProductPage({ params }) {
             </div>
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Product</p>
+            <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Product</p>
             <h1 className="mt-3 text-4xl font-semibold text-[#333]">{product.name}</h1>
             <p className="mt-4 text-lg text-muted">{product.description}</p>
             <p className="mt-6 text-2xl font-bold text-[#ff5722]">₦{product.price.toLocaleString()}</p>

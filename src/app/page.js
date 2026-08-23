@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
 import PageSection from './_components/PageSection';
+import HomeHashScroll from '@/components/HomeHashScroll';
 import { products } from '@/data/products';
 
 const testimonials = [
@@ -15,12 +16,31 @@ const testimonials = [
   },
 ];
 
+const homepageValues = [
+  {
+    label: 'Natural ingredients',
+    description: 'Gentle formulas chosen with care.',
+    icon: 'N',
+  },
+  {
+    label: 'Made in Lagos',
+    description: 'Created locally for modern rituals.',
+    icon: 'L',
+  },
+  {
+    label: 'Cruelty-free',
+    description: 'Thoughtful care, never tested on animals.',
+    icon: 'C',
+  },
+];
+
 export default function HomePage() {
   return (
     <div>
-      <PageSection className="mx-auto grid max-w-7xl gap-8 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-28">
+      <HomeHashScroll />
+      <PageSection className="mx-auto grid max-w-7xl items-center gap-8 px-6 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-16">
         <div className="flex flex-col justify-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Skincare that feels considered</p>
+          <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Naturally made to Boost your Skinfidence</p>
           <h1 className="mt-4 text-4xl font-semibold leading-tight text-[#333] sm:text-5xl">Glow softly with essentials made for everyday ritual.</h1>
           <p className="mt-6 max-w-xl text-lg leading-8 text-[#555]">
             Veeluxe brings together gentle cleansing, brightening care, and nourishing formulas designed to support calm, healthy skin.
@@ -42,12 +62,26 @@ export default function HomePage() {
               <Image src="/images/founder.jpg" alt="Victoria, founder of Veeluxe" width={560} height={620} className="h-full w-full object-cover" />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">About Veeluxe</p>
+              <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">About Veeluxe</p>
               <h2 className="mt-3 text-3xl font-semibold text-[#333]">Founded by Victoria, with a belief that skincare should feel simple and uplifting.</h2>
               <p className="mt-4 text-lg leading-8 text-[#555]">
                 Every formula is created to bring comfort to your routine while supporting visible results. The goal is not to overload your shelf, but to offer essentials you will reach for again and again.
               </p>
               <Link href="/about" className="mt-6 inline-flex rounded-full bg-[#ff5722] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#e64a19]">Read our story</Link>
+              <div className="mt-8 border-t border-[#f2e7e2] pt-6">
+                <h3 className="page-eyebrow uppercase tracking-[0.2em] text-[#ff5722]">Our values</h3>
+                <div className="mt-4 grid gap-5 sm:grid-cols-3">
+                  {homepageValues.map((value) => (
+                    <div key={value.label}>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fff1eb] text-sm font-bold text-[#ff5722]" aria-hidden="true">
+                        {value.icon}
+                      </div>
+                      <h4 className="mt-2 text-sm font-semibold text-[#333]">{value.label}</h4>
+                      <p className="mt-1 text-sm leading-6 text-[#666]">{value.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -56,7 +90,7 @@ export default function HomePage() {
       <PageSection id="bestsellers" className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Bestsellers</p>
+            <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Bestsellers</p>
             <h2 className="mt-2 text-3xl font-semibold text-[#333]">Loved by customers for everyday glow.</h2>
           </div>
           <Link href="/products" className="text-sm font-semibold text-[#ff5722]">View all products</Link>
@@ -72,7 +106,7 @@ export default function HomePage() {
 
       <PageSection id="reviews" className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
         <div className="rounded-[24px] bg-[#fffefc] p-8 shadow-[0_8px_24px_rgba(0,0,0,0.04)] lg:p-12">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Testimonials</p>
+          <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Testimonials</p>
           <h2 className="mt-3 text-3xl font-semibold text-[#333]">What real customers say.</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             {testimonials.map((testimonial, index) => (

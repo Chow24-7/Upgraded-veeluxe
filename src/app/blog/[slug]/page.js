@@ -42,9 +42,9 @@ export default async function BlogPostPage({ params }) {
   const relatedPosts = getRelatedPosts(slug);
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-28">
+    <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
       <article className="mx-auto max-w-3xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Blog</p>
+        <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Blog</p>
         <h1 className="mt-3 text-3xl font-semibold text-[#333] sm:text-4xl">{post.title}</h1>
         <p className="mt-4 text-sm text-muted">{post.date}</p>
         <div className="relative mt-8 h-72 overflow-hidden rounded-[24px]">

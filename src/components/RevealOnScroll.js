@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-export default function RevealOnScroll({ children, className = '', delay = 0, threshold = 0.15, rootMargin = '0px' }) {
+export default function RevealOnScroll({ children, className = '', delay = 0, threshold = 0.15, rootMargin = '0px', ...props }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -29,6 +29,7 @@ export default function RevealOnScroll({ children, className = '', delay = 0, th
       ref={ref}
       className={`reveal ${visible ? 'reveal-visible' : ''} ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
+      {...props}
     >
       {children}
     </div>

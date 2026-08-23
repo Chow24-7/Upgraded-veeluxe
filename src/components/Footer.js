@@ -7,7 +7,7 @@ const socialLinks = [
   { label: 'Instagram', href: 'https://www.instagram.com/__veeluxe?igsh=eTBpeG0zaTZ4YWlk&utm_source=qr' },
   { label: 'WhatsApp', href: 'https://wa.me/2347014888211' },
   { label: 'TikTok', href: 'https://www.tiktok.com/@__veeluxe?_t=ZM-8xfc4k64Snu&_r=1' },
-  { label: 'Snapchat', href: 'https://snapchat.com/t/N6BmtcWx' },
+  { label: 'Snapchat', href: 'https://snapchat.com/t/hFkBoZFz' },
 ];
 
 export default function Footer() {
@@ -43,7 +43,7 @@ export default function Footer() {
     <footer id="contact" className="bg-[#222] py-16 text-[#d3d3d3]">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 lg:grid-cols-[1.2fr_0.8fr_1fr] lg:px-8">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Veeluxe</p>
+          <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Veeluxe</p>
           <h3 className="mt-3 text-2xl font-semibold text-white">Modern skincare, made to feel calm and elevated.</h3>
           <p className="mt-4 max-w-md text-sm leading-7 text-[#c7c7c7]">
             Discover glow-first essentials that bring comfort, ritual, and visible results to your daily routine.

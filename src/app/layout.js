@@ -4,6 +4,10 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ScrollToTop from '@/components/ScrollToTop';
 
+// Note: removed `next/font/google` import to avoid build-time network fetch
+// in restricted environments. The app falls back to the CSS variable --font-sans
+// (defined in globals.css) or system fonts.
+
 export const metadata = {
   title: 'Veeluxe | Skincare essentials',
   description: 'Discover thoughtful skincare essentials from Veeluxe with a modern, calm, and elevated ritual.',

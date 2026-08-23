@@ -127,10 +127,10 @@ export default function CheckoutClient() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-28">
+    <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
       <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="rounded-[24px] border border-[#f2e7e2] bg-white p-8 shadow-[0_8px_24px_rgba(0,0,0,0.05)]">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Checkout</p>
+          <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Checkout</p>
           <h1 className="mt-3 text-3xl font-semibold text-[#333]">Complete your order</h1>
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <input className="w-full rounded-lg border border-[#e2d8d3] px-4 py-3" placeholder="Full name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />

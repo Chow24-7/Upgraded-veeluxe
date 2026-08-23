@@ -7,9 +7,9 @@ export default function BlogPage() {
   const posts = getAllPosts();
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-28">
+    <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
       <PageSection className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Blog</p>
+        <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Blog</p>
         <h1 className="mt-3 text-3xl font-semibold text-[#333] sm:text-4xl">Notes on skincare, rituals, and healthy habits.</h1>
         <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-[#555]">
           A modern editorial space for thoughtful skincare advice and simple guidance.

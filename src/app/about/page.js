@@ -8,21 +8,53 @@ const values = [
   'Ingredients selected for glow, hydration, and confidence.',
 ];
 
+const trustValues = [
+  {
+    label: 'Natural ingredients',
+    description: 'Gentle formulas chosen with care.',
+    icon: 'N',
+  },
+  {
+    label: 'Made in Lagos',
+    description: 'Created locally for modern rituals.',
+    icon: 'L',
+  },
+  {
+    label: 'Cruelty-free',
+    description: 'Thoughtful care, never tested on animals.',
+    icon: 'C',
+  },
+];
+
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-28">
+    <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
       <PageSection className="overflow-hidden rounded-[24px] border border-[#f2e7e2] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
         <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
           <div className="relative min-h-[320px]">
             <Image src="/images/about-hero.jpg" alt="Veeluxe skincare ritual" fill className="object-cover" />
           </div>
           <div className="p-8 lg:p-12">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Our story</p>
+            <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Our story</p>
             <h1 className="mt-3 text-3xl font-semibold text-[#333] sm:text-4xl">Founder Victoria created Veeluxe around one simple idea: skincare should feel calm, elegant, and real.</h1>
             <p className="mt-5 text-lg leading-8 text-[#555]">
               What began as a personal search for products that felt kind to the skin and beautiful on the shelf evolved into a collection designed for modern routines. Veeluxe blends performance and simplicity, so each product feels considered rather than excessive.
             </p>
             <Link href="/products" className="mt-8 inline-flex rounded-full bg-[#ff5722] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#e64a19]">Explore the collection</Link>
+            <div className="mt-10 border-t border-[#f2e7e2] pt-8">
+              <h2 className="page-eyebrow uppercase tracking-[0.2em] text-[#ff5722]">Our values</h2>
+              <div className="mt-5 grid gap-5 sm:grid-cols-3">
+                {trustValues.map((value) => (
+                  <div key={value.label}>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fff1eb] text-lg font-semibold text-[#ff5722]" aria-hidden="true">
+                      {value.icon}
+                    </div>
+                    <h3 className="mt-3 text-sm font-semibold text-[#333]">{value.label}</h3>
+                    <p className="mt-1 text-sm leading-6 text-[#666]">{value.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </PageSection>

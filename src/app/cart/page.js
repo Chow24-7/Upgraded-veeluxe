@@ -9,10 +9,10 @@ export default function CartPage() {
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-28">
+    <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#ff5722]">Cart</p>
+          <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Cart</p>
           <h1 className="mt-3 text-3xl font-semibold text-[#333]">Your curated essentials</h1>
         </div>
         <p className="text-sm text-[#666]">{cartCount} item{cartCount === 1 ? '' : 's'}</p>
