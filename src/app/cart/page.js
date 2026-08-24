@@ -27,16 +27,18 @@ export default function CartPage() {
         <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-4">
             {cartItems.map((item) => (
-              <div key={item.id} className="flex flex-col gap-4 rounded-[18px] border border-[#f2e7e2] bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] sm:flex-row sm:items-center sm:justify-between">
+              <div key={item.cartKey || item.id} className="flex flex-col gap-4 rounded-[18px] border border-[#f2e7e2] bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-[#333]">{item.name}</h2>
-                  <p className="mt-1 text-sm text-muted">₦{item.price.toLocaleString()}</p>
+                  <p className="mt-1 text-sm text-muted">{item.selectedSize ? `${item.selectedSize} · ` : ''}₦{item.price.toLocaleString()} each</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <select value={item.quantity} onChange={(event) => updateQuantity(item.id, Number(event.target.value))} className="rounded-lg border border-[#e2d8d3] px-3 py-2 text-sm">
-                    {[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}
-                  </select>
-                  <button type="button" onClick={() => removeFromCart(item.id)} className="text-sm font-semibold text-[#ff5722]">Remove</button>
+                  <div className="flex items-center rounded-lg border border-[#e2d8d3]">
+                    <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, item.quantity - 1)} className="flex h-9 w-9 items-center justify-center text-lg text-[#333]" aria-label={`Decrease ${item.name} quantity`}>-</button>
+                    <span className="min-w-8 text-center text-sm font-semibold text-[#333]">{item.quantity}</span>
+                    <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, item.quantity + 1)} className="flex h-9 w-9 items-center justify-center text-lg text-[#333]" aria-label={`Increase ${item.name} quantity`}>+</button>
+                  </div>
+                  <button type="button" onClick={() => removeFromCart(item.cartKey || item.id)} className="text-sm font-semibold text-[#ff5722]">Remove</button>
                 </div>
               </div>
             ))}

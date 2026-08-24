@@ -40,7 +40,7 @@ export default function HomePage() {
       <HomeHashScroll />
       <PageSection className="mx-auto grid max-w-7xl items-center gap-8 px-6 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-16">
         <div className="flex flex-col justify-center">
-          <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Naturally made to Boost your Skinfidence</p>
+          <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Naturally made to improve your Skinfidence</p>
           <h1 className="mt-4 text-4xl font-semibold leading-tight text-[#333] sm:text-5xl">Glow softly with essentials made for everyday ritual.</h1>
           <p className="mt-6 max-w-xl text-lg leading-8 text-[#555]">
             Veeluxe brings together gentle cleansing, brightening care, and nourishing formulas designed to support calm, healthy skin.

@@ -157,7 +157,7 @@ export default function Header() {
               </span>
             )}
           </Link>
-          <Link href="/cart" className={`relative rounded-full border border-[#f4dcd4] p-2 text-[#333] ${cartPulse ? 'cart-pulse' : ''}`}>
+          <Link id="cart-icon" href="/cart" className={`relative rounded-full border border-[#f4dcd4] p-2 text-[#333] ${cartPulse ? 'cart-pulse' : ''}`}>
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <circle cx="9" cy="20" r="1.5" />
               <circle cx="18" cy="20" r="1.5" />

@@ -91,6 +91,21 @@ h1 {
 .btn-added {
   animation: btnPop 540ms ease forwards;
 }
+
+.cart-flight-image {
+  position: fixed;
+  z-index: 100;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+  pointer-events: none;
+  animation: cartFlight 560ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes cartFlight {
+  0% { opacity: 0.95; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0.15; transform: translate(var(--cart-x), var(--cart-y)) scale(0.28); }
+}
 @keyframes btnPop {
   0% { transform: scale(1); }
   40% { transform: scale(1.08); }

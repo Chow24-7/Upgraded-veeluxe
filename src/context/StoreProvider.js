@@ -39,20 +39,21 @@ export function StoreProvider({ children }) {
 
   const addToCart = (product) => {
     setCartItems((current) => {
-      const existing = current.find((item) => item.id === product.id);
+      const cartKey = `${product.id}-${product.selectedSize || 'default'}`;
+      const existing = current.find((item) => item.cartKey === cartKey || (!item.cartKey && item.id === product.id));
       if (existing) {
         return current.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          (item.cartKey === cartKey || (!item.cartKey && item.id === product.id)) ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...current, { ...product, quantity: 1 }];
+      return [...current, { ...product, cartKey, quantity: 1 }];
     });
   };
 
   const updateQuantity = (id, quantity) => {
     setCartItems((current) =>
       current.flatMap((item) => {
-        if (item.id !== id) return [item];
+        if (item.cartKey !== id && item.id !== id) return [item];
         if (quantity <= 0) return [];
         return [{ ...item, quantity }];
       })
@@ -60,7 +61,7 @@ export function StoreProvider({ children }) {
   };
 
   const removeFromCart = (id) => {
-    setCartItems((current) => current.filter((item) => item.id !== id));
+    setCartItems((current) => current.filter((item) => item.cartKey !== id && item.id !== id));
   };
 
   const clearCart = () => setCartItems([]);
