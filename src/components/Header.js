@@ -27,8 +27,10 @@ export default function Header() {
   const [wishlistCountClient, setWishlistCountClient] = useState(0);
 
   useEffect(() => {
-    // sync client-only counts after mount
-    setCartCountClient(cartCount ?? 0);
+    const frame = window.requestAnimationFrame(() => {
+      setCartCountClient(cartCount ?? 0);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [cartCount]);
 
   useEffect(() => {
@@ -41,11 +43,15 @@ export default function Header() {
   }, [pathname]);
 
   useEffect(() => {
-    setMobileMenuOpen(false);
+    const frame = window.requestAnimationFrame(() => setMobileMenuOpen(false));
+    return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
 
   useEffect(() => {
-    setWishlistCountClient(wishlistCount ?? 0);
+    const frame = window.requestAnimationFrame(() => {
+      setWishlistCountClient(wishlistCount ?? 0);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [wishlistCount]);
 
   // pulse animation when cart increases
@@ -132,7 +138,7 @@ export default function Header() {
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f4dcd4] text-[#333] md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-[#f4dcd4] text-[#333] md:hidden"
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             aria-expanded={mobileMenuOpen}
             onClick={() => setMobileMenuOpen((open) => !open)}
@@ -147,7 +153,7 @@ export default function Header() {
               </svg>
             )}
           </button>
-          <Link href="/wishlist" className="relative rounded-full border border-[#f4dcd4] p-2 text-[#333]">
+          <Link href="/wishlist" aria-label={`Wishlist${wishlistCountClient > 0 ? `, ${wishlistCountClient} saved items` : ''}`} className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#f4dcd4] text-[#333]">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M12 20s-6.5-4.35-8.17-8.26A4.94 4.94 0 0 1 7.5 4.5a4.24 4.24 0 0 1 4.5 2.49A4.24 4.24 0 0 1 16.5 4.5a4.94 4.94 0 0 1 3.67 7.24C18.5 15.65 12 20 12 20Z" />
             </svg>
@@ -157,7 +163,7 @@ export default function Header() {
               </span>
             )}
           </Link>
-          <Link id="cart-icon" href="/cart" className={`relative rounded-full border border-[#f4dcd4] p-2 text-[#333] ${cartPulse ? 'cart-pulse' : ''}`}>
+          <Link id="cart-icon" href="/cart" aria-label={`Cart${cartCountClient > 0 ? `, ${cartCountClient} items` : ''}`} className={`relative flex h-11 w-11 items-center justify-center rounded-full border border-[#f4dcd4] text-[#333] ${cartPulse ? 'cart-pulse' : ''}`}>
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <circle cx="9" cy="20" r="1.5" />
               <circle cx="18" cy="20" r="1.5" />

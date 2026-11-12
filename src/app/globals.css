@@ -5,8 +5,7 @@
   --foreground: #333333;
 }
 
-/* The Inter font is provided via next/font in the root layout and exposed
-   as the CSS variable --font-sans. Use it here with a sensible fallback. */
+/* Inter is bundled by next/font. Keep local system fonts as a resilient fallback. */
 
 :root {
   --color-background: var(--background);

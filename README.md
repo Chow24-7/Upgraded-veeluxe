@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Veeluxe
 
-## Getting Started
+Veeluxe is a skincare store built with Next.js 16 App Router, JavaScript, Tailwind CSS v4, and Paystack. Orders are verified on the server and stored in Firestore.
 
-First, run the development server:
+## Run locally
 
-```bash
+Use Node.js 20.9 or newer. Install dependencies and start the development server:
+
+```sh
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. The project keeps `legacy-peer-deps=true` in `.npmrc` and uses `next build --webpack` for production builds.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Add the following to `.env.local` for local work and to the matching environment in Vercel:
 
-## Learn More
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Production required | Public origin used for metadata, canonical URLs, sitemap, and robots. Defaults to `http://localhost:3000`. |
+| `NEXT_PUBLIC_PAYSTACK_KEY` | Checkout required | Paystack public key used by the browser checkout. |
+| `PAYSTACK_SECRET_KEY` | Payment processing required | Server-only key used to verify Paystack references and webhook signatures. |
+| `FIREBASE_PROJECT_ID` | Orders and admin required | Firebase project ID for Firestore. |
+| `FIREBASE_CLIENT_EMAIL` | Orders and admin required | Service account client email. |
+| `FIREBASE_PRIVATE_KEY` | Orders and admin required | Service account private key. Store it as a secret. In Vercel, preserve escaped newlines as `\\n` if needed. |
+| `ADMIN_PASSWORD` | Admin required | Password for `/admin/orders`. Use a long, unique secret. |
+| `SMTP_HOST` | Email required | SMTP server hostname. |
+| `SMTP_PORT` | Email required | SMTP port, commonly `587` or `465`. |
+| `SMTP_USER` | Email required | SMTP account username. |
+| `SMTP_PASS` | Email required | SMTP account password. Store it as a secret. |
+| `SMTP_FROM` | Optional | Sender address. Defaults to `SMTP_USER`. |
+| `CONTACT_EMAIL` | Optional | Business inbox for contact and order notifications. Defaults to `SMTP_USER`. |
 
-To learn more about Next.js, take a look at the following resources:
+Never commit `.env.local`, service account credentials, or live payment secrets. Configure Paystack's webhook URL as `https://your-domain/api/paystack/webhook`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Products and prices
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Edit `src/data/products.js`. Each product has an integer `id`, name, base price in NGN, image path under `public/images`, and description. For products with options, add a `sizes` array of `{ label, price }` entries. Use the same labels and prices for product display and server-side checkout verification. Product detail pages and the sitemap are generated from this data.
 
-## Deploy on Vercel
+## Blog posts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Add a Markdown file under `content/blog`. Include frontmatter with `title`, `date` in `YYYY-MM-DD` format, `excerpt`, `slug`, and an `image` path under `public/images`, followed by the post body. Use Markdown-style internal links such as `[Luxe Body Butter](/products/3)` and `[related article](/blog/article-slug)` for links within article copy.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Build and deploy
+
+Run the production checks:
+
+```sh
+npm run lint
+npx next build --webpack
+```
+
+In Vercel, import the repository, set the environment variables above, and deploy using the existing build script. Add the Paystack webhook URL in the Paystack dashboard. Use Paystack test keys and test transactions before switching to live keys. Confirm the Firestore service account has only the required Firestore access.

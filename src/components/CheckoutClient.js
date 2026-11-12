@@ -11,8 +11,6 @@ export default function CheckoutClient() {
   const [form, setForm] = useState({ name: '', email: '', address: '' });
   const [paymentError, setPaymentError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [showToast, setShowToast] = useState(false);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const amountKobo = subtotal * 100;
@@ -20,14 +18,18 @@ export default function CheckoutClient() {
 
   const config = useMemo(
     () => ({
-      reference: `veeluxe-${Date.now()}`,
       email: form.email,
       amount: amountKobo,
       publicKey: paystackPublicKey,
+      currency: 'NGN',
       metadata: {
         name: form.name,
         address: form.address,
-        items: cartItems.map((item) => ({ name: item.name, quantity: item.quantity })),
+        items: cartItems.map((item) => ({
+          productId: item.id,
+          quantity: item.quantity,
+          selectedSize: item.selectedSize || null,
+        })),
       },
       channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money'],
     }),
@@ -40,7 +42,7 @@ export default function CheckoutClient() {
     event.preventDefault();
     setPaymentError('');
 
-    if (!form.name || !form.email || !form.address) {
+    if (form.name.trim().length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) || form.address.trim().length < 5) {
       setPaymentError('Please complete your name, email, and shipping address before paying.');
       return;
     }
@@ -56,65 +58,35 @@ export default function CheckoutClient() {
     }
 
     setIsProcessing(true);
+    const paymentConfig = {
+      ...config,
+      reference: `veeluxe-${Date.now()}-${globalThis.crypto.randomUUID()}`,
+    };
 
     const onSuccess = async (response) => {
-      console.log('Paystack onSuccess fired', response);
-
-      // Send order confirmation email in background — do not block navigation
-      try {
-        fetch('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'order',
-            name: form.name,
-            email: form.email,
-            message: `Payment reference: ${response.reference}\nShipping address: ${form.address}\n\nItems:\n${cartItems.map((item) => `${item.name} x ${item.quantity}`).join('\n')}`,
-            orderDetails: {
-              reference: response.reference,
-              amount: subtotal,
-              items: cartItems,
-              address: form.address,
-            },
-          }),
-        })
-          .then(async (res) => {
-            if (!res.ok) {
-              const payload = await res.json().catch(() => ({}));
-              console.error('Order email failed:', payload.error || res.statusText);
-            }
-          })
-          .catch((err) => console.error('Order email request error:', err));
-      } catch (err) {
-        console.error('Background email scheduling failed:', err);
+      const reference = response?.reference;
+      if (!reference) {
+        setPaymentError('Paystack did not return a payment reference. Your cart has not been cleared.');
+        setIsProcessing(false);
+        return;
       }
 
-      // Show a brief confirmation toast, then navigate
       try {
-        setToastMessage('Payment confirmed — redirecting…');
-        setShowToast(true);
+        const verificationResponse = await fetch('/api/paystack/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reference }),
+        });
+        const payload = await verificationResponse.json().catch(() => ({}));
+        if (!verificationResponse.ok) {
+          throw new Error(payload.error || 'The payment could not be verified yet.');
+        }
 
-        // Give the toast a short moment to be visible before navigating
-        setTimeout(() => {
-          try {
-            clearCart();
-          } catch (err) {
-            console.error('Clearing cart failed:', err);
-          }
-          try {
-            router.push('/order-success');
-          } catch (err) {
-            console.error('Navigation to order-success failed:', err);
-          }
-        }, 650);
-
-        // Hide the toast after a short duration (in case navigation is slow)
-        setTimeout(() => {
-          setShowToast(false);
-          setToastMessage('');
-        }, 2500);
-      } catch (err) {
-        console.error('Toast/navigation failed:', err);
+        clearCart();
+        router.replace(`/order-success?ref=${encodeURIComponent(reference)}`);
+      } catch (error) {
+        setPaymentError(`We could not verify payment ${reference}. ${error.message} Your cart has not been cleared. Please keep this reference and try again later.`);
+        setIsProcessing(false);
       }
     };
 
@@ -123,7 +95,7 @@ export default function CheckoutClient() {
       setPaymentError('Payment was cancelled or closed before completion.');
     };
 
-    initializePayment({ config, onSuccess, onClose });
+    initializePayment({ config: paymentConfig, onSuccess, onClose });
   };
 
   return (
@@ -133,13 +105,29 @@ export default function CheckoutClient() {
           <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Checkout</p>
           <h1 className="mt-3 text-3xl font-semibold text-[#333]">Complete your order</h1>
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <input className="w-full rounded-lg border border-[#e2d8d3] px-4 py-3" placeholder="Full name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
-            <input className="w-full rounded-lg border border-[#e2d8d3] px-4 py-3" placeholder="Email address" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required />
-            <input className="w-full rounded-lg border border-[#e2d8d3] px-4 py-3" placeholder="Shipping address" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} required />
+            <label className="block text-sm font-medium text-[#555]">
+              Full name
+              <input autoComplete="name" className="mt-1 w-full rounded-lg border border-[#e2d8d3] px-4 py-3" placeholder="Full name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required minLength={2} />
+            </label>
+            <label className="block text-sm font-medium text-[#555]">
+              Email address
+              <input autoComplete="email" className="mt-1 w-full rounded-lg border border-[#e2d8d3] px-4 py-3" placeholder="Email address" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required />
+            </label>
+            <label className="block text-sm font-medium text-[#555]">
+              Shipping address
+              <input autoComplete="street-address" className="mt-1 w-full rounded-lg border border-[#e2d8d3] px-4 py-3" placeholder="Shipping address" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} required minLength={5} />
+            </label>
             <button type="submit" className="w-full rounded-full bg-[#ff5722] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#e64a19] disabled:cursor-not-allowed disabled:opacity-70" disabled={isProcessing}>
               {isProcessing ? 'Preparing payment...' : 'Pay now with Paystack'}
             </button>
-            {paymentError ? <p className="text-sm text-[#b94a48]">{paymentError}</p> : null}
+            <p className="text-center text-sm leading-6 text-[#666]">
+              By paying you agree to our{' '}
+              <a href="/terms" className="font-semibold text-[#ff5722] underline underline-offset-2">Terms</a>
+              {' '}and{' '}
+              <a href="/shipping-returns" className="font-semibold text-[#ff5722] underline underline-offset-2">Shipping &amp; Returns</a>
+              {' '}policy.
+            </p>
+            {paymentError ? <p role="alert" className="text-sm text-[#b94a48]">{paymentError}</p> : null}
           </form>
         </div>
 

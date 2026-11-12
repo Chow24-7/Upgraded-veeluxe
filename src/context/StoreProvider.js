@@ -37,16 +37,17 @@ export function StoreProvider({ children }) {
     window.localStorage.setItem('veeluxe-wishlist', JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
-  const addToCart = (product) => {
+  const addToCart = (product, quantity = 1) => {
+    const quantityToAdd = Math.max(1, Math.floor(Number(quantity) || 1));
     setCartItems((current) => {
       const cartKey = `${product.id}-${product.selectedSize || 'default'}`;
       const existing = current.find((item) => item.cartKey === cartKey || (!item.cartKey && item.id === product.id));
       if (existing) {
         return current.map((item) =>
-          (item.cartKey === cartKey || (!item.cartKey && item.id === product.id)) ? { ...item, quantity: item.quantity + 1 } : item
+          (item.cartKey === cartKey || (!item.cartKey && item.id === product.id)) ? { ...item, quantity: item.quantity + quantityToAdd } : item
         );
       }
-      return [...current, { ...product, cartKey, quantity: 1 }];
+      return [...current, { ...product, cartKey, quantity: quantityToAdd }];
     });
   };
 

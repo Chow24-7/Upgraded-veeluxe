@@ -34,11 +34,11 @@ export default function CartPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center rounded-lg border border-[#e2d8d3]">
-                    <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, item.quantity - 1)} className="flex h-9 w-9 items-center justify-center text-lg text-[#333]" aria-label={`Decrease ${item.name} quantity`}>-</button>
+                    <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, item.quantity - 1)} className="flex h-11 w-11 items-center justify-center text-lg text-[#333]" aria-label={`Decrease ${item.name} quantity`}>-</button>
                     <span className="min-w-8 text-center text-sm font-semibold text-[#333]">{item.quantity}</span>
-                    <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, item.quantity + 1)} className="flex h-9 w-9 items-center justify-center text-lg text-[#333]" aria-label={`Increase ${item.name} quantity`}>+</button>
+                    <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, item.quantity + 1)} className="flex h-11 w-11 items-center justify-center text-lg text-[#333]" aria-label={`Increase ${item.name} quantity`}>+</button>
                   </div>
-                  <button type="button" onClick={() => removeFromCart(item.cartKey || item.id)} className="text-sm font-semibold text-[#ff5722]">Remove</button>
+                  <button type="button" onClick={() => removeFromCart(item.cartKey || item.id)} className="min-h-11 px-2 text-sm font-semibold text-[#ff5722]">Remove</button>
                 </div>
               </div>
             ))}

@@ -4,6 +4,12 @@ import ProductCard from '@/components/ProductCard';
 import PageSection from './_components/PageSection';
 import HomeHashScroll from '@/components/HomeHashScroll';
 import { products } from '@/data/products';
+import { canonicalMetadata } from '@/lib/seo';
+
+export const metadata = canonicalMetadata('/', {
+  title: 'Veeluxe | Skincare essentials',
+  description: 'Discover thoughtful skincare essentials from Veeluxe with a modern, calm, and elevated ritual.',
+});
 
 const testimonials = [
   {
@@ -51,7 +57,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="overflow-hidden rounded-[24px] border border-[#f2e7e2] bg-white p-4 shadow-[0_16px_40px_rgba(0,0,0,0.08)]">
-          <Image src="/images/IMG_5980.jpg" alt="Skincare product display" width={900} height={1100} className="h-full w-full rounded-[18px] object-cover" priority />
+          <Image src="/images/IMG_5980.jpg" alt="Veeluxe skincare products displayed together" width={900} height={1100} sizes="(max-width: 1024px) 100vw, 45vw" className="h-full w-full rounded-[18px] object-cover" priority />
         </div>
       </PageSection>
 
@@ -59,7 +65,7 @@ export default function HomePage() {
         <div className="rounded-[24px] border border-[#f2e7e2] bg-[#fff] p-8 shadow-[0_8px_24px_rgba(0,0,0,0.05)] lg:p-12">
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="overflow-hidden rounded-[18px]">
-              <Image src="/images/founder.jpg" alt="Victoria, founder of Veeluxe" width={560} height={620} className="h-full w-full object-cover" />
+              <Image src="/images/founder.jpg" alt="Victoria, founder of Veeluxe" width={560} height={620} sizes="(max-width: 1024px) 100vw, 50vw" className="h-full w-full object-cover" />
             </div>
             <div>
               <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">About Veeluxe</p>
@@ -93,7 +99,7 @@ export default function HomePage() {
             <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Bestsellers</p>
             <h2 className="mt-2 text-3xl font-semibold text-[#333]">Loved by customers for everyday glow.</h2>
           </div>
-          <Link href="/products" className="text-sm font-semibold text-[#ff5722]">View all products</Link>
+          <Link href="/products" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#ff5722]">View all products</Link>
         </div>
         <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {products.slice(0, 4).map((product, index) => (

@@ -28,7 +28,7 @@ export default function WishlistPage() {
           {wishlistItems.map((product) => (
             <div key={product.id} className="flex flex-col overflow-hidden rounded-[12px] border border-[#f2e7e2] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
               <div className="relative h-48 w-full overflow-hidden rounded-md">
-                <Image src={product.image} alt={product.name} fill className="object-cover" />
+                <Image src={product.image} alt={`${product.name} skincare product`} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw" className="object-cover" />
               </div>
               <div className="mt-3 flex flex-1 items-start justify-between gap-3">
                 <div>
@@ -36,8 +36,8 @@ export default function WishlistPage() {
                   <p className="mt-1 text-sm text-muted">₦{product.price.toLocaleString()}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <button onClick={() => addToCart(product)} className="rounded-lg bg-[#ff5722] px-3 py-2 text-sm font-semibold text-white">Add to cart</button>
-                  <button onClick={() => removeFromWishlist(product.id)} className="text-sm text-[#b94a48]">Remove</button>
+                  <button onClick={() => addToCart(product)} className="min-h-11 rounded-lg bg-[#ff5722] px-3 py-2 text-sm font-semibold text-white">Add to cart</button>
+                  <button onClick={() => removeFromWishlist(product.id)} className="min-h-11 px-2 text-sm text-[#b94a48]">Remove</button>
                 </div>
               </div>
             </div>

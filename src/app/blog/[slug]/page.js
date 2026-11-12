@@ -1,6 +1,9 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getAllPosts, getPostBySlug, getRelatedPosts } from '@/lib/posts';
+import JsonLd from '@/components/JsonLd';
+import { absoluteUrl, canonicalMetadata, createBreadcrumbData } from '@/lib/seo';
 
 export async function generateStaticParams() {
   const posts = getAllPosts();
@@ -13,7 +16,7 @@ export async function generateMetadata({ params }) {
 
   if (!post) return {};
 
-  return {
+  return canonicalMetadata(`/blog/${slug}`, {
     title: `${post.title} | Veeluxe`,
     description: post.excerpt,
     openGraph: {
@@ -28,7 +31,7 @@ export async function generateMetadata({ params }) {
       description: post.excerpt,
       images: [post.image],
     },
-  };
+  });
 }
 
 export default async function BlogPostPage({ params }) {
@@ -44,15 +47,35 @@ export default async function BlogPostPage({ params }) {
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
       <article className="mx-auto max-w-3xl">
+        <JsonLd data={{
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: post.title,
+          description: post.excerpt,
+          image: [absoluteUrl(post.image)],
+          datePublished: post.date || undefined,
+          author: { '@type': 'Organization', name: 'Veeluxe', url: absoluteUrl('/') },
+          publisher: {
+            '@type': 'Organization',
+            name: 'Veeluxe',
+            logo: { '@type': 'ImageObject', url: absoluteUrl('/images/logo.png') },
+          },
+          mainEntityOfPage: absoluteUrl(`/blog/${slug}`),
+        }} />
+        <JsonLd data={createBreadcrumbData([
+          { name: 'Home', path: '/' },
+          { name: 'Blog', path: '/blog' },
+          { name: post.title, path: `/blog/${slug}` },
+        ])} />
         <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Blog</p>
         <h1 className="mt-3 text-3xl font-semibold text-[#333] sm:text-4xl">{post.title}</h1>
         <p className="mt-4 text-sm text-muted">{post.date}</p>
         <div className="relative mt-8 h-72 overflow-hidden rounded-[24px]">
-          <Image src={post.image} alt={post.title} fill className="object-cover" />
+          <Image src={post.image} alt={`${post.title} article cover`} fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" />
         </div>
         <div className="prose prose-stone mt-8 max-w-none text-lg leading-8 text-[#555]">
           {post.content.split('\n\n').map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
+            <p key={index}>{renderInlineLinks(paragraph)}</p>
           ))}
         </div>
       </article>
@@ -71,4 +94,24 @@ export default async function BlogPostPage({ params }) {
       </section>
     </div>
   );
+}
+
+function renderInlineLinks(text) {
+  const linkPattern = /\[([^\]]+)\]\((\/[^\s)]+)\)/g;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = linkPattern.exec(text)) !== null) {
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
+    parts.push(
+      <Link key={`${match.index}-${match[2]}`} href={match[2]} className="inline-block py-2 align-middle font-semibold text-[#ff5722] underline decoration-[#ff5722]/40 underline-offset-2 hover:text-[#e64a19]">
+        {match[1]}
+      </Link>
+    );
+    lastIndex = linkPattern.lastIndex;
+  }
+
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+  return parts;
 }

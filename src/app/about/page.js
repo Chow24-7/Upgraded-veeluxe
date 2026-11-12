@@ -1,6 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import PageSection from '../_components/PageSection';
+import JsonLd from '@/components/JsonLd';
+import { canonicalMetadata, createBreadcrumbData } from '@/lib/seo';
+
+export const metadata = canonicalMetadata('/about', {
+  title: 'About Veeluxe | Skincare essentials',
+  description: 'Learn about Veeluxe, our founder, and our approach to calm, thoughtful skincare rituals.',
+});
 
 const values = [
   'Thoughtful formulations that support everyday comfort.',
@@ -29,10 +36,14 @@ const trustValues = [
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
+      <JsonLd data={createBreadcrumbData([
+        { name: 'Home', path: '/' },
+        { name: 'About', path: '/about' },
+      ])} />
       <PageSection className="overflow-hidden rounded-[24px] border border-[#f2e7e2] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
         <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
           <div className="relative min-h-[320px]">
-            <Image src="/images/about-hero.jpg" alt="Veeluxe skincare ritual" fill className="object-cover" />
+            <Image src="/images/about-hero.jpg" alt="Veeluxe skincare products arranged for a daily ritual" fill sizes="(max-width: 1024px) 100vw, 45vw" className="object-cover" />
           </div>
           <div className="p-8 lg:p-12">
             <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Our story</p>
