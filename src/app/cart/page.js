@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { useStore } from '@/context/StoreProvider';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, clearCart, cartCount } = useStore();
+  const { hydrated, cartItems, removeFromCart, updateQuantity, clearCart, cartCount } = useStore();
+  const visibleCartItems = hydrated ? cartItems : [];
+  const visibleCartCount = hydrated ? cartCount : 0;
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = visibleCartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
@@ -15,10 +17,14 @@ export default function CartPage() {
           <p className="page-eyebrow uppercase tracking-[0.24em] text-[#ff5722]">Cart</p>
           <h1 className="mt-3 text-3xl font-semibold text-[#333]">Your curated essentials</h1>
         </div>
-        <p className="text-sm text-[#666]">{cartCount} item{cartCount === 1 ? '' : 's'}</p>
+        <p className="text-sm text-[#666]">{visibleCartCount} item{visibleCartCount === 1 ? '' : 's'}</p>
       </div>
 
-      {cartItems.length === 0 ? (
+      {!hydrated ? (
+        <div className="mt-10 rounded-[24px] border border-[#f2e7e2] bg-white p-10 text-center shadow-[0_8px_24px_rgba(0,0,0,0.05)]">
+          <p className="text-lg text-[#555]">Loading your cart...</p>
+        </div>
+      ) : visibleCartItems.length === 0 ? (
         <div className="mt-10 rounded-[24px] border border-[#f2e7e2] bg-white p-10 text-center shadow-[0_8px_24px_rgba(0,0,0,0.05)]">
           <p className="text-lg text-[#555]">Your cart is empty right now.</p>
           <Link href="/products" className="mt-6 inline-flex rounded-full bg-[#ff5722] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#e64a19]">Browse products</Link>
@@ -26,7 +32,7 @@ export default function CartPage() {
       ) : (
         <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-4">
-            {cartItems.map((item) => (
+            {visibleCartItems.map((item) => (
               <div key={item.cartKey || item.id} className="flex flex-col gap-4 rounded-[18px] border border-[#f2e7e2] bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.05)] sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-[#333]">{item.name}</h2>

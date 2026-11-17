@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useStore } from '@/context/StoreProvider';
 
 const navItems = [
@@ -18,20 +18,11 @@ const navItems = [
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const { cartCount, wishlistCount } = useStore();
+  const { hydrated, cartCount, wishlistCount } = useStore();
   const pendingHomeScrollRef = useRef(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Prevent hydration mismatch: server renders 0, so initialize to 0
-  const [cartCountClient, setCartCountClient] = useState(0);
-  const [wishlistCountClient, setWishlistCountClient] = useState(0);
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      setCartCountClient(cartCount ?? 0);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [cartCount]);
+  const visibleCartCount = hydrated ? cartCount : 0;
+  const visibleWishlistCount = hydrated ? wishlistCount : 0;
 
   useEffect(() => {
     if (pathname !== '/' || !pendingHomeScrollRef.current) return;
@@ -47,24 +38,44 @@ export default function Header() {
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      setWishlistCountClient(wishlistCount ?? 0);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [wishlistCount]);
-
   // pulse animation when cart increases
   const [cartPulse, setCartPulse] = useState(false);
-  const prevCartRef = useRef(0);
+  const prevCartRef = useRef(null);
+  const cartFlightActiveRef = useRef(false);
+  const pulseTimeoutRef = useRef(null);
+  const pulseCart = useCallback(() => {
+    setCartPulse(false);
+    window.requestAnimationFrame(() => setCartPulse(true));
+    window.clearTimeout(pulseTimeoutRef.current);
+    pulseTimeoutRef.current = window.setTimeout(() => setCartPulse(false), 350);
+  }, []);
+
   useEffect(() => {
-    const prev = prevCartRef.current || 0;
-    if ((cartCount ?? 0) > prev) {
-      setCartPulse(true);
-      window.setTimeout(() => setCartPulse(false), 600);
+    const handleFlightStart = () => {
+      cartFlightActiveRef.current = true;
+    };
+    const handleFlightArrived = () => {
+      cartFlightActiveRef.current = false;
+      pulseCart();
+    };
+
+    window.addEventListener('veeluxe:cart-flight-started', handleFlightStart);
+    window.addEventListener('veeluxe:cart-flight-arrived', handleFlightArrived);
+    return () => {
+      window.removeEventListener('veeluxe:cart-flight-started', handleFlightStart);
+      window.removeEventListener('veeluxe:cart-flight-arrived', handleFlightArrived);
+      window.clearTimeout(pulseTimeoutRef.current);
+    };
+  }, [pulseCart]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const prev = prevCartRef.current;
+    if (prev !== null && visibleCartCount > prev && !cartFlightActiveRef.current) {
+      pulseCart();
     }
-    prevCartRef.current = cartCount ?? 0;
-  }, [cartCount]);
+    prevCartRef.current = visibleCartCount;
+  }, [hydrated, pulseCart, visibleCartCount]);
 
   const handleHomeClick = (event) => {
     event.preventDefault();
@@ -153,25 +164,25 @@ export default function Header() {
               </svg>
             )}
           </button>
-          <Link href="/wishlist" aria-label={`Wishlist${wishlistCountClient > 0 ? `, ${wishlistCountClient} saved items` : ''}`} className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#f4dcd4] text-[#333]">
+          <Link href="/wishlist" aria-label={`Wishlist${visibleWishlistCount > 0 ? `, ${visibleWishlistCount} saved items` : ''}`} className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#f4dcd4] text-[#333]">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M12 20s-6.5-4.35-8.17-8.26A4.94 4.94 0 0 1 7.5 4.5a4.24 4.24 0 0 1 4.5 2.49A4.24 4.24 0 0 1 16.5 4.5a4.94 4.94 0 0 1 3.67 7.24C18.5 15.65 12 20 12 20Z" />
             </svg>
-            {wishlistCountClient > 0 && (
+            {visibleWishlistCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff5722] text-[10px] font-semibold text-white">
-                {wishlistCountClient}
+                {visibleWishlistCount}
               </span>
             )}
           </Link>
-          <Link id="cart-icon" href="/cart" aria-label={`Cart${cartCountClient > 0 ? `, ${cartCountClient} items` : ''}`} className={`relative flex h-11 w-11 items-center justify-center rounded-full border border-[#f4dcd4] text-[#333] ${cartPulse ? 'cart-pulse' : ''}`}>
+          <Link id="cart-icon" href="/cart" aria-label={`Cart${visibleCartCount > 0 ? `, ${visibleCartCount} items` : ''}`} className={`relative flex h-11 w-11 items-center justify-center rounded-full border border-[#f4dcd4] text-[#333] ${cartPulse ? 'cart-pulse' : ''}`}>
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <circle cx="9" cy="20" r="1.5" />
               <circle cx="18" cy="20" r="1.5" />
               <path d="M3 4h2l2.4 8.2a1 1 0 0 0 1 .8h8.5a1 1 0 0 0 1-.8L17 7H7" />
             </svg>
-            {cartCountClient > 0 && (
+            {visibleCartCount > 0 && (
               <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#ff5722] text-[10px] font-semibold text-white">
-                {cartCountClient}
+                {visibleCartCount}
               </span>
             )}
           </Link>

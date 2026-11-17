@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 const StoreContext = createContext(null);
 
 export function StoreProvider({ children }) {
+  const [hydrated, setHydrated] = useState(false);
   const [cartItems, setCartItems] = useState(() => {
     if (typeof window === 'undefined') return [];
     try {
@@ -26,6 +27,11 @@ export function StoreProvider({ children }) {
       return [];
     }
   });
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setHydrated(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -83,6 +89,7 @@ export function StoreProvider({ children }) {
 
   const value = useMemo(
     () => ({
+      hydrated,
       cartItems,
       wishlistItems,
       cartCount: cartItems.reduce((acc, item) => acc + item.quantity, 0),
@@ -94,7 +101,7 @@ export function StoreProvider({ children }) {
       toggleWishlist,
       removeFromWishlist,
     }),
-    [cartItems, wishlistItems]
+    [cartItems, hydrated, wishlistItems]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

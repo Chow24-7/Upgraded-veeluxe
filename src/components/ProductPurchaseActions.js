@@ -14,10 +14,10 @@ export default function ProductPurchaseActions({
   buttonClassName = 'rounded-full bg-[#ff5722] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e64a19]',
   animateFromProductImage = true,
 }) {
-  const { addToCart, toggleWishlist, wishlistItems } = useStore();
+  const { addToCart, toggleWishlist, wishlistItems, hydrated } = useStore();
   const [added, setAdded] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
-  const isSaved = wishlistItems.some((item) => item.id === product.id);
+  const isSaved = hydrated && wishlistItems.some((item) => item.id === product.id);
 
   const handleAddToCart = () => {
     const cartProduct = { ...product, price, ...(selectedSize ? { selectedSize } : {}) };
@@ -28,19 +28,31 @@ export default function ProductPurchaseActions({
     window.setTimeout(() => setToastVisible(false), 4200);
 
     if (!animateFromProductImage) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
     const sourceImage = document.querySelector(`[data-product-card="${product.id}"] img`);
     const cartIcon = document.getElementById('cart-icon');
     if (sourceImage && cartIcon) {
+      document.querySelectorAll('.cart-flight-image').forEach((image) => image.remove());
       const sourceRect = sourceImage.getBoundingClientRect();
       const cartRect = cartIcon.getBoundingClientRect();
       const flyingImage = sourceImage.cloneNode(true);
+      flyingImage.removeAttribute('style');
       flyingImage.className = 'cart-flight-image';
       flyingImage.style.left = `${sourceRect.left + sourceRect.width / 2 - 28}px`;
       flyingImage.style.top = `${sourceRect.top + sourceRect.height / 2 - 28}px`;
       flyingImage.style.setProperty('--cart-x', `${cartRect.left + cartRect.width / 2 - (sourceRect.left + sourceRect.width / 2)}px`);
       flyingImage.style.setProperty('--cart-y', `${cartRect.top + cartRect.height / 2 - (sourceRect.top + sourceRect.height / 2)}px`);
+      const finishFlight = () => {
+        if (!flyingImage.isConnected) return;
+        window.clearTimeout(flightCleanupTimeout);
+        flyingImage.remove();
+        window.dispatchEvent(new CustomEvent('veeluxe:cart-flight-arrived'));
+      };
+      const flightCleanupTimeout = window.setTimeout(finishFlight, 900);
+      flyingImage.addEventListener('animationend', finishFlight, { once: true });
       document.body.appendChild(flyingImage);
-      window.setTimeout(() => flyingImage.remove(), 560);
+      window.dispatchEvent(new CustomEvent('veeluxe:cart-flight-started'));
     }
   };
 
