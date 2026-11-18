@@ -98,8 +98,9 @@ export default function Footer() {
           </form>
         </div>
       </div>
-      <div className="mx-auto mt-10 max-w-7xl border-t border-white/10 px-6 pt-6 text-center text-sm text-[#9b9b9b] lg:px-8">
-        © 2026 Veeluxe. All rights reserved.
+      <div className="mx-auto mt-10 flex max-w-7xl flex-wrap items-center justify-between gap-3 border-t border-white/10 px-6 pt-6 text-sm text-[#9b9b9b] lg:px-8">
+        <span>© 2026 Veeluxe. All rights reserved.</span>
+        <Link href="/admin/orders" rel="nofollow" className="text-[#777] transition hover:text-[#9b9b9b]">Staff</Link>
       </div>
     </footer>
   );

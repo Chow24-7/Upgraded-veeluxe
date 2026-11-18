@@ -19,6 +19,19 @@ export function rateLimit(key, limit, windowMs) {
   return { limited: true, retryAfter: Math.ceil((current.resetAt - now) / 1000) };
 }
 
+export function isRateLimited(key, limit) {
+  const current = requestsByKey.get(key);
+  if (!current || current.resetAt <= Date.now()) {
+    requestsByKey.delete(key);
+    return { limited: false, retryAfter: 0 };
+  }
+
+  return {
+    limited: current.count >= limit,
+    retryAfter: current.count >= limit ? Math.ceil((current.resetAt - Date.now()) / 1000) : 0,
+  };
+}
+
 export function getClientIp(request) {
   const realIp = request.headers.get('x-real-ip');
   const forwardedFor = request.headers.get('x-forwarded-for');

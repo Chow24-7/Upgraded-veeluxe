@@ -5,35 +5,52 @@ import {
   isAdminPasswordValid,
   SESSION_LIFETIME_SECONDS,
 } from '@/lib/admin-auth';
-import { getClientIp, rateLimit } from '@/lib/rate-limit';
+import { getClientIp, isRateLimited, rateLimit } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
+const MAX_FAILED_ATTEMPTS = 5;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const RATE_LIMIT_MESSAGE = 'Too many attempts, try again later.';
+
+function jsonResponse(payload, options = {}) {
+  const response = NextResponse.json(payload, options);
+  response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  return response;
+}
+
+function tooManyAttemptsResponse(retryAfter) {
+  return jsonResponse({ error: RATE_LIMIT_MESSAGE }, {
+    status: 429,
+    headers: { 'Retry-After': String(retryAfter) },
+  });
+}
+
 export async function POST(request) {
-  const { limited, retryAfter } = rateLimit(`admin-login:${getClientIp(request)}`, 8, 15 * 60 * 1000);
-  if (limited) {
-    return NextResponse.json({ error: 'Too many login attempts. Please try again later.' }, {
-      status: 429,
-      headers: { 'Retry-After': String(retryAfter) },
-    });
-  }
+  const rateLimitKey = `admin-login:${getClientIp(request)}`;
 
   if (!process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: 'Admin access is not configured.' }, { status: 503 });
+    return jsonResponse({ error: 'Admin access is not configured.' }, { status: 503 });
   }
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+    return jsonResponse({ error: 'Invalid request.' }, { status: 400 });
   }
 
+  const lockout = isRateLimited(rateLimitKey, MAX_FAILED_ATTEMPTS);
+  if (lockout.limited) return tooManyAttemptsResponse(lockout.retryAfter);
+
   if (!isAdminPasswordValid(body?.password)) {
-    return NextResponse.json({ error: 'Incorrect password.' }, { status: 401 });
+    const failureLimit = rateLimit(rateLimitKey, MAX_FAILED_ATTEMPTS, RATE_LIMIT_WINDOW_MS);
+    if (failureLimit.limited) return tooManyAttemptsResponse(failureLimit.retryAfter);
+    return jsonResponse({ error: 'Incorrect password.' }, { status: 401 });
   }
 
   const response = NextResponse.json({ authenticated: true });
+  response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   response.cookies.set(ADMIN_SESSION_COOKIE, createAdminSession(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
