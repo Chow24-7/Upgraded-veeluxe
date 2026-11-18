@@ -72,11 +72,17 @@ async function verifyWithPaystack(reference) {
 
 function buildVerifiedOrder(transaction) {
   const metadata = parseMetadata(transaction.metadata);
-  const { items, total } = priceCart(metadata.items);
+  let pricedOrder;
+  try {
+    pricedOrder = priceCart(metadata.items, metadata.deliveryAreaId);
+  } catch (error) {
+    throw new PaymentVerificationError(error.message || 'The order pricing is invalid.');
+  }
+  const { items, itemsSubtotal, deliveryArea, deliveryFee, total } = pricedOrder;
   const expectedKobo = total * 100;
 
   if (!Number.isSafeInteger(expectedKobo) || transaction.amount !== expectedKobo) {
-    throw new PaymentVerificationError('The amount paid does not match the current product prices.');
+    throw new PaymentVerificationError('The amount paid does not match the current product and delivery prices.');
   }
 
   const name = typeof metadata.name === 'string' ? metadata.name.trim().slice(0, 120) : '';
@@ -93,6 +99,9 @@ function buildVerifiedOrder(transaction) {
     email,
     address,
     items,
+    itemsSubtotal,
+    deliveryArea,
+    deliveryFee,
     total,
     status: 'paid',
   };
@@ -101,7 +110,10 @@ function buildVerifiedOrder(transaction) {
 function isSameOrder(existing, incoming) {
   return existing.total === incoming.total
     && existing.email === incoming.email
-    && JSON.stringify(existing.items) === JSON.stringify(incoming.items);
+    && JSON.stringify(existing.items) === JSON.stringify(incoming.items)
+    && (existing.itemsSubtotal ?? existing.total) === (incoming.itemsSubtotal ?? incoming.total)
+    && (existing.deliveryArea ?? null) === (incoming.deliveryArea ?? null)
+    && (existing.deliveryFee ?? 0) === (incoming.deliveryFee ?? 0);
 }
 
 async function createOrderOnce(order) {
@@ -145,7 +157,17 @@ async function claimOrderEmails(reference) {
 export async function processPaystackReference(reference) {
   const validReference = validateReference(reference);
   const transaction = await verifyWithPaystack(validReference);
-  const order = buildVerifiedOrder(transaction);
+  const existingOrder = await getOrderByReference(validReference);
+  let order;
+  if (existingOrder) {
+    const storedAmountKobo = existingOrder.total * 100;
+    if (!Number.isSafeInteger(storedAmountKobo) || transaction.amount !== storedAmountKobo) {
+      throw new PaymentVerificationError('The verified payment amount does not match the stored order.');
+    }
+    order = existingOrder;
+  } else {
+    order = buildVerifiedOrder(transaction);
+  }
   await createOrderOnce(order);
 
   if (await claimOrderEmails(order.reference)) {

@@ -44,6 +44,24 @@ export default async function OrderSuccessPage({ searchParams }) {
                 </li>
               ))}
             </ul>
+            <div className="mt-4 space-y-2 border-t border-[#f2e7e2] pt-4 text-sm text-[#555]">
+              <div className="flex justify-between gap-4">
+                <span>Items subtotal</span>
+                <span>₦{(order.itemsSubtotal ?? order.total).toLocaleString()}</span>
+              </div>
+              {order.deliveryArea ? (
+                <div className="flex justify-between gap-4">
+                  <span>Delivery area</span>
+                  <span className="text-right">{order.deliveryArea}</span>
+                </div>
+              ) : null}
+              {order.deliveryFee !== undefined ? (
+                <div className="flex justify-between gap-4">
+                  <span>Delivery fee</span>
+                  <span>₦{order.deliveryFee.toLocaleString()}</span>
+                </div>
+              ) : null}
+            </div>
             <div className="mt-4 flex justify-between border-t border-[#f2e7e2] pt-4 font-semibold text-[#333]">
               <span>Total paid</span>
               <span>₦{order.total.toLocaleString()}</span>

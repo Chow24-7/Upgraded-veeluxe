@@ -67,6 +67,11 @@ async function OrdersList() {
             <p className="font-semibold text-[#ff5722]">₦{order.total.toLocaleString()} · {order.status}</p>
           </div>
           <p className="mt-4 text-sm text-[#555]">Delivery address: {order.address}</p>
+          <div className="mt-3 space-y-1 text-sm text-[#555]">
+            {order.deliveryArea ? <p>Delivery area: {order.deliveryArea}</p> : null}
+            <p>Items subtotal: ₦{(order.itemsSubtotal ?? order.total).toLocaleString()}</p>
+            {order.deliveryFee !== undefined ? <p>Delivery fee: ₦{order.deliveryFee.toLocaleString()}</p> : null}
+          </div>
           <ul className="mt-4 space-y-2 border-t border-[#f2e7e2] pt-4 text-sm text-[#555]">
             {order.items.map((item, index) => (
               <li key={`${order.reference}-${item.productId}-${index}`} className="flex flex-wrap justify-between gap-2">

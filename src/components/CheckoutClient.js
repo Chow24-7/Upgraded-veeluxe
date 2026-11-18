@@ -4,18 +4,22 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePaystackPayment } from 'react-paystack';
 import { useStore } from '@/context/StoreProvider';
+import { deliveryAreaGroups, deliveryAreas } from '@/data/delivery';
 
 export default function CheckoutClient() {
   const router = useRouter();
   const { cartItems, clearCart, hydrated } = useStore();
-  const [form, setForm] = useState({ name: '', email: '', address: '' });
+  const [form, setForm] = useState({ name: '', email: '', address: '', deliveryAreaId: '' });
   const [paymentError, setPaymentError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationIsSlow, setVerificationIsSlow] = useState(false);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const amountKobo = subtotal * 100;
+  const selectedDeliveryArea = deliveryAreas.find((area) => area.id === form.deliveryAreaId);
+  const deliveryFee = selectedDeliveryArea?.fee ?? 0;
+  const orderTotal = subtotal + deliveryFee;
+  const amountKobo = orderTotal * 100;
   const visibleCartItems = hydrated ? cartItems : [];
   const visibleSubtotal = hydrated ? subtotal : 0;
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_KEY || '';
@@ -29,6 +33,7 @@ export default function CheckoutClient() {
       metadata: {
         name: form.name,
         address: form.address,
+        deliveryAreaId: form.deliveryAreaId,
         items: cartItems.map((item) => ({
           productId: item.id,
           quantity: item.quantity,
@@ -37,7 +42,7 @@ export default function CheckoutClient() {
       },
       channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money'],
     }),
-    [amountKobo, cartItems, form.address, form.email, form.name, paystackPublicKey]
+    [amountKobo, cartItems, form.address, form.deliveryAreaId, form.email, form.name, paystackPublicKey]
   );
 
   const initializePayment = usePaystackPayment(config);
@@ -54,6 +59,11 @@ export default function CheckoutClient() {
 
     if (cartItems.length === 0) {
       setPaymentError('Your cart is empty. Add a product before checking out.');
+      return;
+    }
+
+    if (!selectedDeliveryArea) {
+      setPaymentError('Please choose a delivery area before paying.');
       return;
     }
 
@@ -137,7 +147,31 @@ export default function CheckoutClient() {
                 Shipping address
                 <input autoComplete="street-address" className="mt-1 w-full rounded-lg border border-[#e2d8d3] px-4 py-3" placeholder="Shipping address" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} required minLength={5} />
               </label>
-              <button type="submit" className="w-full rounded-full bg-[#ff5722] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#e64a19] disabled:cursor-not-allowed disabled:opacity-70" disabled={isProcessing || isVerifying}>
+              <label className="block text-sm font-medium text-[#555]">
+                Delivery area
+                <select
+                  className="mt-1 w-full rounded-lg border border-[#e2d8d3] bg-white px-4 py-3"
+                  value={form.deliveryAreaId}
+                  onChange={(event) => setForm({ ...form, deliveryAreaId: event.target.value })}
+                  required
+                >
+                  <option value="" disabled>Select your delivery area</option>
+                  {deliveryAreaGroups.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.areas.map((area) => (
+                        <option key={area.id} value={area.id}>{area.name}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <span className="mt-2 block text-xs leading-5 text-[#666]">
+                  Can&apos;t find your area?{' '}
+                  <a href="https://wa.me/2347014888211" target="_blank" rel="noreferrer" className="font-semibold text-[#ff5722] underline underline-offset-2">
+                    Message us on WhatsApp for a delivery quote.
+                  </a>
+                </span>
+              </label>
+              <button type="submit" className="w-full rounded-full bg-[#ff5722] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#e64a19] disabled:cursor-not-allowed disabled:opacity-70" disabled={isProcessing || isVerifying || !form.deliveryAreaId}>
                 {isProcessing ? 'Preparing payment...' : 'Pay now with Paystack'}
               </button>
               <p className="text-center text-sm leading-6 text-[#666]">
@@ -186,8 +220,16 @@ export default function CheckoutClient() {
           <div className="mt-6 border-t border-[#f2e7e2] pt-4 text-lg font-semibold text-[#333]">
             <div className="flex items-center justify-between"><span>Subtotal</span><span>₦{visibleSubtotal.toLocaleString()}</span></div>
             <div className="mt-2 flex items-center justify-between text-sm text-[#666]">
-              <span>Paystack amount</span>
-              <span>₦{visibleSubtotal.toLocaleString()}</span>
+              <span>Delivery area</span>
+              <span>{hydrated ? selectedDeliveryArea?.name || 'Choose an area' : 'Loading...'}</span>
+            </div>
+            <div className="mt-2 flex items-center justify-between text-sm text-[#666]">
+              <span>Delivery fee</span>
+              <span>{hydrated && selectedDeliveryArea ? `₦${deliveryFee.toLocaleString()}` : 'Choose an area'}</span>
+            </div>
+            <div className="mt-2 flex items-center justify-between text-sm text-[#666]">
+              <span>Total to pay</span>
+              <span>{hydrated && selectedDeliveryArea ? `₦${orderTotal.toLocaleString()}` : 'Choose an area'}</span>
             </div>
           </div>
         </aside>
