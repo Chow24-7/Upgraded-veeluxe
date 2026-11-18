@@ -2,6 +2,7 @@ import 'server-only';
 import { getOrdersDb, FieldValue } from '@/lib/firebase-admin';
 import { sendOrderEmails } from '@/lib/order-emails';
 import { priceCart } from '@/lib/pricing';
+import { normalizeNigerianPhone } from '@/lib/phone';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REFERENCE_PATTERN = /^[A-Za-z0-9._-]{1,100}$/;
@@ -87,7 +88,12 @@ function buildVerifiedOrder(transaction) {
 
   const name = typeof metadata.name === 'string' ? metadata.name.trim().slice(0, 120) : '';
   const address = typeof metadata.address === 'string' ? metadata.address.trim().slice(0, 1000) : '';
+  const phoneNumber = normalizeNigerianPhone(metadata.phoneNumber);
   const email = typeof transaction.customer?.email === 'string' ? transaction.customer.email.trim().toLowerCase() : '';
+
+  if (!phoneNumber) {
+    throw new PaymentVerificationError('Please enter a valid Nigerian phone number, for example 08012345678.');
+  }
 
   if (name.length < 2 || address.length < 5 || email.length > 254 || !EMAIL_PATTERN.test(email)) {
     throw new PaymentVerificationError('Verified payment is missing valid customer or delivery details.');
@@ -98,6 +104,7 @@ function buildVerifiedOrder(transaction) {
     name,
     email,
     address,
+    phoneNumber,
     items,
     itemsSubtotal,
     deliveryArea,
@@ -110,6 +117,7 @@ function buildVerifiedOrder(transaction) {
 function isSameOrder(existing, incoming) {
   return existing.total === incoming.total
     && existing.email === incoming.email
+    && (existing.phoneNumber ?? null) === (incoming.phoneNumber ?? null)
     && JSON.stringify(existing.items) === JSON.stringify(incoming.items)
     && (existing.itemsSubtotal ?? existing.total) === (incoming.itemsSubtotal ?? incoming.total)
     && (existing.deliveryArea ?? null) === (incoming.deliveryArea ?? null)
@@ -134,6 +142,7 @@ async function createOrderOnce(order) {
       ...order,
       createdAt: FieldValue.serverTimestamp(),
       notificationStatus: 'pending',
+      emailStatus: 'pending',
     });
     return order;
   });
@@ -148,9 +157,102 @@ async function claimOrderEmails(reference) {
     if (!snapshot.exists || snapshot.data().notificationStatus !== 'pending') return false;
     transaction.update(orderRef, {
       notificationStatus: 'sending',
+      emailStatus: 'sending',
       notificationStartedAt: FieldValue.serverTimestamp(),
     });
     return true;
+  });
+}
+
+function sanitizeEmailError(error, order) {
+  let message = typeof error?.message === 'string' ? error.message : 'Unknown email error';
+  [
+    order.email,
+    order.phoneNumber,
+    order.address,
+    process.env.CONTACT_EMAIL,
+    process.env.SMTP_USER,
+    process.env.SMTP_FROM,
+  ].filter(Boolean).forEach((value) => {
+    message = message.replaceAll(value, '[redacted]');
+  });
+  return {
+    code: typeof error?.code === 'string' ? error.code : 'UNKNOWN',
+    message: message.slice(0, 500),
+  };
+}
+
+export async function sendClaimedOrderEmails(order, emailTypes) {
+  const orderRef = getOrdersDb().collection('orders').doc(order.reference);
+  const requestedEmailTypes = emailTypes || ['business', 'customer'];
+  let failedEmails = [];
+
+  try {
+    const failures = await sendOrderEmails(order, { emailTypes: requestedEmailTypes });
+    failedEmails = failures.map((failure) => failure.emailType);
+    failures.forEach((failure) => {
+      const details = sanitizeEmailError(failure.error, order);
+      console.error('Order email delivery failed', {
+        reference: order.reference,
+        email: failure.emailType,
+        code: details.code,
+        message: details.message,
+      });
+    });
+  } catch (error) {
+    const details = sanitizeEmailError(error, order);
+    console.error('Order email delivery failed', {
+      reference: order.reference,
+      email: requestedEmailTypes.join(' and '),
+      code: details.code,
+      message: details.message,
+    });
+    failedEmails = requestedEmailTypes;
+  }
+
+  const emailStatus = failedEmails.length ? 'failed' : 'sent';
+  try {
+    await orderRef.update({
+      emailStatus,
+      emailStatusAt: FieldValue.serverTimestamp(),
+      failedEmails,
+      notificationStatus: emailStatus,
+    });
+  } catch (error) {
+    const details = sanitizeEmailError(error, order);
+    console.error('Unable to update order email status', {
+      reference: order.reference,
+      code: details.code,
+      message: details.message,
+    });
+  }
+
+  return { emailStatus, failedEmails };
+}
+
+export async function claimFailedOrderEmails(reference) {
+  const validReference = validateReference(reference);
+  const db = getOrdersDb();
+  const orderRef = db.collection('orders').doc(validReference);
+
+  return db.runTransaction(async (transaction) => {
+    const snapshot = await transaction.get(orderRef);
+    if (!snapshot.exists) return null;
+
+    const order = { ...snapshot.data(), reference: snapshot.id };
+    if (order.emailStatus !== 'failed' || order.notificationStatus === 'sending') return null;
+
+    const emailTypes = Array.isArray(order.failedEmails)
+      ? order.failedEmails.filter((type) => type === 'business' || type === 'customer')
+      : ['business', 'customer'];
+    if (emailTypes.length === 0) return null;
+
+    transaction.update(orderRef, {
+      emailStatus: 'sending',
+      notificationStatus: 'sending',
+      notificationStartedAt: FieldValue.serverTimestamp(),
+    });
+    return { order, emailTypes };
   });
 }
 
@@ -169,23 +271,9 @@ export async function processPaystackReference(reference) {
     order = buildVerifiedOrder(transaction);
   }
   await createOrderOnce(order);
+  const emailClaimed = await claimOrderEmails(order.reference);
 
-  if (await claimOrderEmails(order.reference)) {
-    try {
-      await sendOrderEmails(order);
-      await getOrdersDb().collection('orders').doc(order.reference).update({
-        notificationStatus: 'sent',
-        notificationSentAt: FieldValue.serverTimestamp(),
-      });
-    } catch (error) {
-      console.error(`Order notification failed for ${order.reference}:`, error);
-      await getOrdersDb().collection('orders').doc(order.reference).update({
-        notificationStatus: 'failed',
-      });
-    }
-  }
-
-  return order;
+  return { order, emailClaimed };
 }
 
 export async function getOrderByReference(reference) {

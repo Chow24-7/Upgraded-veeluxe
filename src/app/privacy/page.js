@@ -26,7 +26,7 @@ export default function PrivacyPage() {
           <div className="mt-10 space-y-8 border-t border-[#f2e7e2] pt-8">
             <section>
               <h2 className="text-2xl font-semibold text-[#333]">Information we collect</h2>
-              <p className="mt-3 text-lg leading-8 text-[#555]">When you place an order, we receive the name, email address, delivery address, items ordered, and payment reference needed to process and support that order. If you send a contact message, we receive the details you choose to provide. Our website may also process basic technical information needed to deliver and protect the service.</p>
+              <p className="mt-3 text-lg leading-8 text-[#555]">When you place an order, we receive the name, email address, phone number, delivery address, items ordered, and payment reference needed to process and support that order. We collect your phone number so our dispatch rider can contact you about delivery, and may share it with our delivery partner for this purpose. If you send a contact message, we receive the details you choose to provide. Our website may also process basic technical information needed to deliver and protect the service.</p>
             </section>
 
             <section>

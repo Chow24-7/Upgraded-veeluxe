@@ -1,5 +1,6 @@
+import { after } from 'next/server';
 import { NextResponse } from 'next/server';
-import { PaymentVerificationError, processPaystackReference } from '@/lib/paystack-orders';
+import { PaymentVerificationError, processPaystackReference, sendClaimedOrderEmails } from '@/lib/paystack-orders';
 import { getClientIp, rateLimit } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
@@ -21,7 +22,8 @@ export async function POST(request) {
   }
 
   try {
-    const order = await processPaystackReference(body?.reference);
+    const { order, emailClaimed } = await processPaystackReference(body?.reference);
+    if (emailClaimed) after(() => sendClaimedOrderEmails(order));
     return NextResponse.json({ verified: true, reference: order.reference });
   } catch (error) {
     if (error instanceof PaymentVerificationError) {

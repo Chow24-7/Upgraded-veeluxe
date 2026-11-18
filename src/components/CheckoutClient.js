@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { usePaystackPayment } from 'react-paystack';
 import { useStore } from '@/context/StoreProvider';
 import { deliveryAreaGroups, deliveryAreas } from '@/data/delivery';
+import { normalizeNigerianPhone } from '@/lib/phone';
 
 export default function CheckoutClient() {
   const router = useRouter();
   const { cartItems, clearCart, hydrated } = useStore();
-  const [form, setForm] = useState({ name: '', email: '', address: '', deliveryAreaId: '' });
+  const [form, setForm] = useState({ name: '', email: '', address: '', phoneNumber: '', deliveryAreaId: '' });
   const [paymentError, setPaymentError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -33,6 +34,7 @@ export default function CheckoutClient() {
       metadata: {
         name: form.name,
         address: form.address,
+        phoneNumber: normalizeNigerianPhone(form.phoneNumber) || '',
         deliveryAreaId: form.deliveryAreaId,
         items: cartItems.map((item) => ({
           productId: item.id,
@@ -42,7 +44,7 @@ export default function CheckoutClient() {
       },
       channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money'],
     }),
-    [amountKobo, cartItems, form.address, form.deliveryAreaId, form.email, form.name, paystackPublicKey]
+    [amountKobo, cartItems, form.address, form.deliveryAreaId, form.email, form.name, form.phoneNumber, paystackPublicKey]
   );
 
   const initializePayment = usePaystackPayment(config);
@@ -51,6 +53,12 @@ export default function CheckoutClient() {
     event.preventDefault();
     if (isProcessing || isVerifying) return;
     setPaymentError('');
+
+    const normalizedPhoneNumber = normalizeNigerianPhone(form.phoneNumber);
+    if (!normalizedPhoneNumber) {
+      setPaymentError('Please enter a valid Nigerian phone number, for example 08012345678.');
+      return;
+    }
 
     if (form.name.trim().length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) || form.address.trim().length < 5) {
       setPaymentError('Please complete your name, email, and shipping address before paying.');
@@ -146,6 +154,23 @@ export default function CheckoutClient() {
               <label className="block text-sm font-medium text-[#555]">
                 Shipping address
                 <input autoComplete="street-address" className="mt-1 w-full rounded-lg border border-[#e2d8d3] px-4 py-3" placeholder="Shipping address" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} required minLength={5} />
+              </label>
+              <label className="block text-sm font-medium text-[#555]">
+                Phone number
+                <input
+                  autoComplete="tel"
+                  inputMode="tel"
+                  type="tel"
+                  className="mt-1 w-full rounded-lg border border-[#e2d8d3] px-4 py-3"
+                  placeholder="08012345678"
+                  value={form.phoneNumber}
+                  onChange={(event) => setForm({ ...form, phoneNumber: event.target.value })}
+                  required
+                  aria-describedby="delivery-phone-note"
+                />
+                <span id="delivery-phone-note" className="mt-2 block rounded-lg border border-[#f2d4c8] bg-[#fff5f0] px-3 py-3 text-sm leading-6 text-[#713b2d]">
+                  Please enter a number you are using right now and can answer. Our dispatch rider will call this number to confirm you are available to receive your package. A wrong or unreachable number may delay your delivery.
+                </span>
               </label>
               <label className="block text-sm font-medium text-[#555]">
                 Delivery area

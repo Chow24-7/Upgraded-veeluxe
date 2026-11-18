@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import AdminLoginForm from '@/components/AdminLoginForm';
 import AdminLogoutButton from '@/components/AdminLogoutButton';
+import ResendOrderEmailsButton from '@/components/ResendOrderEmailsButton';
 import { ADMIN_SESSION_COOKIE, isAdminSessionValid } from '@/lib/admin-auth';
 import { getRecentOrders } from '@/lib/paystack-orders';
 import { canonicalMetadata } from '@/lib/seo';
@@ -60,15 +61,27 @@ async function OrdersList() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="text-lg font-semibold text-[#333]">{order.name}</h2>
+              {order.phoneNumber ? (
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                  <a href={`tel:${order.phoneNumber}`} className="font-semibold text-[#555] underline underline-offset-2">{order.phoneNumber}</a>
+                  <a href={`https://wa.me/${order.phoneNumber.replace(/^\+/, '')}`} target="_blank" rel="noreferrer" className="font-semibold text-[#ff5722] underline underline-offset-2">WhatsApp</a>
+                </div>
+              ) : <p className="mt-1 text-sm text-[#666]">No phone number</p>}
+              {order.deliveryArea ? <p className="mt-1 text-sm text-[#555]">Delivery area: {order.deliveryArea}</p> : null}
               <p className="mt-1 text-sm text-[#666]">{order.email}</p>
               <p className="mt-1 text-sm text-[#666]">Reference: {order.reference}</p>
               <p className="mt-1 text-sm text-[#666]">{order.createdAt?.toDate?.().toLocaleString() || 'Date unavailable'}</p>
+              {order.emailStatus ? (
+                <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${order.emailStatus === 'sent' ? 'bg-[#eaf5ed] text-[#356b43]' : order.emailStatus === 'failed' ? 'bg-[#fff0ed] text-[#a34335]' : 'bg-[#f5f1ed] text-[#6b625a]'}`}>
+                  Emails: {order.emailStatus}
+                </span>
+              ) : null}
+              {order.emailStatus === 'failed' ? <ResendOrderEmailsButton reference={order.reference} /> : null}
             </div>
             <p className="font-semibold text-[#ff5722]">₦{order.total.toLocaleString()} · {order.status}</p>
           </div>
           <p className="mt-4 text-sm text-[#555]">Delivery address: {order.address}</p>
           <div className="mt-3 space-y-1 text-sm text-[#555]">
-            {order.deliveryArea ? <p>Delivery area: {order.deliveryArea}</p> : null}
             <p>Items subtotal: ₦{(order.itemsSubtotal ?? order.total).toLocaleString()}</p>
             {order.deliveryFee !== undefined ? <p>Delivery fee: ₦{order.deliveryFee.toLocaleString()}</p> : null}
           </div>

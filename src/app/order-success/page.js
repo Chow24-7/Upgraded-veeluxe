@@ -55,6 +55,11 @@ export default async function OrderSuccessPage({ searchParams }) {
                   <span className="text-right">{order.deliveryArea}</span>
                 </div>
               ) : null}
+              <div className="flex justify-between gap-4">
+                <span>Phone number</span>
+                <span className="text-right">{order.phoneNumber || 'No phone number'}</span>
+              </div>
+              {order.phoneNumber ? <p className="text-sm leading-6">Our dispatch rider will call this number.</p> : null}
               {order.deliveryFee !== undefined ? (
                 <div className="flex justify-between gap-4">
                   <span>Delivery fee</span>

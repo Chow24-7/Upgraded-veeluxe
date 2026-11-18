@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { NextResponse } from 'next/server';
-import { PaymentVerificationError, processPaystackReference } from '@/lib/paystack-orders';
+import { after, NextResponse } from 'next/server';
+import { PaymentVerificationError, processPaystackReference, sendClaimedOrderEmails } from '@/lib/paystack-orders';
 
 export const runtime = 'nodejs';
 
@@ -34,7 +34,8 @@ export async function POST(request) {
   }
 
   try {
-    await processPaystackReference(event.data?.reference);
+    const { order, emailClaimed } = await processPaystackReference(event.data?.reference);
+    if (emailClaimed) after(() => sendClaimedOrderEmails(order));
     return NextResponse.json({ received: true });
   } catch (error) {
     if (error instanceof PaymentVerificationError && error.status < 500) {
