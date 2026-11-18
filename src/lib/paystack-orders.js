@@ -282,11 +282,48 @@ export async function getOrderByReference(reference) {
   return snapshot.exists ? { ...snapshot.data(), reference: snapshot.id } : null;
 }
 
-export async function getRecentOrders(limit = 100) {
+function normalizeOrderDate(value) {
+  if (value && typeof value.toDate === 'function') {
+    const date = value.toDate();
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (value && typeof value === 'object' && Number.isFinite(value.seconds)) {
+    const date = new Date(value.seconds * 1000 + (Number(value.nanoseconds) || 0) / 1_000_000);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const date = new Date(Math.abs(value) < 100_000_000_000 ? value * 1000 : value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
+}
+
+export async function getRecentOrders(limit = 200) {
   const snapshot = await getOrdersDb()
     .collection('orders')
-    .orderBy('createdAt', 'desc')
-    .limit(limit)
     .get();
-  return snapshot.docs.map((document) => ({ ...document.data(), reference: document.id }));
+
+  return snapshot.docs
+    .map((document) => {
+      const order = document.data();
+      return {
+        ...order,
+        reference: document.id,
+        createdAtDate: normalizeOrderDate(order.createdAt),
+      };
+    })
+    .sort((first, second) => {
+      if (!first.createdAtDate) return second.createdAtDate ? 1 : 0;
+      if (!second.createdAtDate) return -1;
+      return second.createdAtDate.getTime() - first.createdAtDate.getTime();
+    })
+    .slice(0, limit);
 }

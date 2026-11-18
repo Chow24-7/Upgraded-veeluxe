@@ -3,10 +3,13 @@ import AdminLoginForm from '@/components/AdminLoginForm';
 import AdminLogoutButton from '@/components/AdminLogoutButton';
 import ResendOrderEmailsButton from '@/components/ResendOrderEmailsButton';
 import { ADMIN_SESSION_COOKIE, isAdminSessionValid } from '@/lib/admin-auth';
+import { formatLagosDateTime } from '@/lib/dates';
 import { getRecentOrders } from '@/lib/paystack-orders';
 import { canonicalMetadata } from '@/lib/seo';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 export const metadata = canonicalMetadata('/admin/orders', {
   title: 'Order management | Veeluxe',
   robots: { index: false, follow: false },
@@ -70,7 +73,7 @@ async function OrdersList() {
               {order.deliveryArea ? <p className="mt-1 text-sm text-[#555]">Delivery area: {order.deliveryArea}</p> : null}
               <p className="mt-1 text-sm text-[#666]">{order.email}</p>
               <p className="mt-1 text-sm text-[#666]">Reference: {order.reference}</p>
-              <p className="mt-1 text-sm text-[#666]">{order.createdAt?.toDate?.().toLocaleString() || 'Date unavailable'}</p>
+              <p className="mt-1 text-sm text-[#666]">{formatLagosDateTime(order.createdAt)}</p>
               {order.emailStatus ? (
                 <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${order.emailStatus === 'sent' ? 'bg-[#eaf5ed] text-[#356b43]' : order.emailStatus === 'failed' ? 'bg-[#fff0ed] text-[#a34335]' : 'bg-[#f5f1ed] text-[#6b625a]'}`}>
                   Emails: {order.emailStatus}
