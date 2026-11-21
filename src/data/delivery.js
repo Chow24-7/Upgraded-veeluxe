@@ -1,82 +1,102 @@
-const deliveryAreas = [
-  { id: 'igando', name: 'Igando', fee: 3000 },
-  { id: 'akesan', name: 'Akesan', fee: 3000 },
-  { id: 'idimu', name: 'Idimu', fee: 3000 },
-  { id: 'ikotun', name: 'Ikotun', fee: 3000 },
-  { id: 'alimosho', name: 'Alimosho', fee: 3000 },
-  { id: 'egbeda', name: 'Egbeda', fee: 3000 },
-  { id: 'ejigbo', name: 'Ejigbo', fee: 3000 },
-  { id: 'ijegun', name: 'Ijegun', fee: 3500 },
-  { id: 'ipaja', name: 'Ipaja', fee: 3500 },
-  { id: 'isolo', name: 'Isolo', fee: 3500 },
-  { id: 'baruwa', name: 'Baruwa', fee: 3500 },
-  { id: 'agege', name: 'Agege', fee: 3500 },
-  { id: 'isheri-oshun', name: 'Isheri Oshun', fee: 3500 },
-  { id: 'ikeja', name: 'Ikeja', fee: 3500 },
-  { id: 'oshodi', name: 'Oshodi', fee: 3500 },
-  { id: 'ajao-estate', name: 'Ajao Estate', fee: 3500 },
-  { id: 'ishefun', name: 'Ishefun', fee: 4000 },
-  { id: 'ayobo', name: 'Ayobo', fee: 4000 },
-  { id: 'iba', name: 'Iba', fee: 4000 },
-  { id: 'iyana-school', name: 'Iyana School', fee: 4000 },
-  { id: 'agboroko', name: 'Agboroko', fee: 4000 },
-  { id: 'igbo-elerin', name: 'Igbo Elerin', fee: 4000 },
-  { id: 'lasu', name: 'LASU', fee: 4000 },
-  { id: 'church-pole', name: 'Church Pole', fee: 4000 },
-  { id: 'okoko', name: 'Okoko', fee: 4500 },
-  { id: 'iyana-sashi', name: 'Iyana Sashi', fee: 4500 },
-  { id: 'ppl', name: 'PPL', fee: 4500 },
-  { id: 'maryland', name: 'Maryland', fee: 4000 },
-  { id: 'ogba', name: 'Ogba', fee: 4000 },
-  { id: 'mushin', name: 'Mushin', fee: 4000 },
-  { id: 'fadeyi', name: 'Fadeyi', fee: 4000 },
-  { id: 'surulere', name: 'Surulere', fee: 4000 },
-  { id: 'onipanu', name: 'Onipanu', fee: 4000 },
-  { id: 'iluperu', name: 'Ilupeju', fee: 4000 },
-  { id: 'ago-palace', name: 'Ago Palace', fee: 4000 },
-  { id: 'okota', name: 'Okota', fee: 4000 },
-  { id: 'somolu', name: 'Somolu', fee: 4500 },
-  { id: 'bariga', name: 'Bariga', fee: 4500 },
-  { id: 'yaba', name: 'Yaba', fee: 4500 },
-  { id: 'gbagada', name: 'Gbagada', fee: 4500 },
-  { id: 'magodo', name: 'Magodo', fee: 5000 },
-  { id: 'ketu', name: 'Ketu', fee: 5000 },
-  { id: 'ojota', name: 'Ojota', fee: 5000 },
-  { id: 'mile-12', name: 'Mile 12', fee: 5000 },
-  { id: 'oworonshoki', name: 'Oworonshoki', fee: 5000 },
-  { id: 'ebute-metta', name: 'Ebute Metta', fee: 5000 },
-  { id: 'oyingbo', name: 'Oyingbo', fee: 5000 },
-  { id: 'apapa', name: 'Apapa', fee: 5000 },
-  { id: 'alakuko', name: 'Alakuko', fee: 5000 },
-  { id: 'alagbado', name: 'Alagbado', fee: 5000 },
-  { id: 'orile', name: 'Orile', fee: 5000 },
-  { id: 'ijora', name: 'Ijora', fee: 5000 },
-  { id: 'cms', name: 'CMS', fee: 5000 },
-  { id: 'festac', name: 'Festac', fee: 5000 },
-  { id: 'satellite-town', name: 'Satellite Town', fee: 5000 },
-  { id: 'ojo-barracks', name: 'Ojo Barracks', fee: 5000 },
-  { id: 'ijaiye', name: 'Ijaiye', fee: 5000 },
-  // Exact sub-area prices for these ranges are to be provided by the logistics company.
-  // Keep each destination as its own entry so it can be split into sub-areas later.
-  { id: 'victoria-island', name: 'Victoria Island', fee: 6000 },
-  { id: 'lekki', name: 'Lekki', fee: 6000 },
-  { id: 'ajah', name: 'Ajah', fee: 7000 },
-  { id: 'sangotedo', name: 'Sangotedo', fee: 7000 },
-  { id: 'ikorodu', name: 'Ikorodu', fee: 8000 },
+// To change a price, edit its zone fee here and push. To add an area, add one name to the zone list.
+const deliveryZones = [
+  {
+    zone: 'Island A',
+    fee: 5000,
+    names: [
+      'Osborne', 'Ikoyi', 'Parkview Estate', 'Banana Island', 'Gerrard Road', 'Bourdillon Road',
+      'Alfred Rewane Road', 'Ikoyi Club', 'Awolowo Road', 'Falomo', 'Kingsway Road', 'Oniru',
+      'Victoria Island (VI)',
+    ],
+  },
+  {
+    zone: 'Island B',
+    fee: 5500,
+    names: [
+      'Admiralty Way', 'Freedom Way', 'Fola Osibo', 'Hakeem Dickson', 'Marwa', 'Providence Street',
+      'Wole Olateju', 'Omorinre Johnson Street', 'Lekki-Ikoyi Link Bridge Axis', 'Adebayo Doherty Road',
+      'T.F. Kuboye Road', 'Bisola Durosinmi-Etti Drive',
+    ],
+  },
+  {
+    zone: 'Island C',
+    fee: 6000,
+    names: [
+      'Osapa London', 'Agungi', 'Ikate', 'Igbo-Efon', 'Jakande', 'Chevron Drive', 'Chevron', 'VGC',
+      'Ikota', 'Megamound Estate', 'Orchid Road', 'Ikota Shopping Complex Axis', 'Abraham Adesanya',
+      'Addo Road', 'Badore', 'Oke Ira Nla', 'Lekki Palm City', 'Lekki County Homes', 'Eleganza',
+      'Lekki Scheme 2',
+    ],
+  },
+  {
+    zone: 'Island D',
+    fee: 7000,
+    names: ['Lagos Business School (LBS)', 'Olokonla', 'Sangotedo'],
+  },
+  {
+    zone: 'Mainland A',
+    fee: 3000,
+    names: [
+      'Ikotun Roundabout', 'Ikotun Market', 'Egbe', 'SCOAN / Synagogue', 'Igando Road Junction',
+      'Igando', 'Igando Police Station', 'LASU-Isheri Road', 'Egan', 'Olorunfemi', "Governor's Road",
+      'College Bus Stop', 'Odo-Eran', 'Council Bus Stop', 'Idimu', 'Pipeline', 'Egbeda Bus Stop',
+      'Egbeda Roundabout', 'Akowonjo', 'Cele Bus Stop', 'Hostel Bus Stop Ikotun', 'Iyana-Ejigbo',
+      'Ejigbo', 'Ejigbo Last Bus Stop', 'NNPC Ejigbo', 'Diamond Estate', 'Isheri Olofin',
+    ],
+  },
+  {
+    zone: 'Mainland B',
+    fee: 3500,
+    names: [
+      'Afolabi Bus Stop Akesan', 'Vulcanizer Bus Stop Akesan', 'Ile Epo Bus Stop Akesan',
+      'Ewedogbon Bus Stop Akesan', 'Adexon Bus Stop Akesan', 'Araromi Bus Stop Akesan',
+      'Akesan Community', 'Shasha', 'Orisumbare', 'Ijegun', 'Abaranje', 'Isolo', 'Baruwa',
+      'Isheri Oshun', 'Jakande Gate', 'Ikeja', 'Oshodi', 'Ajao Estate', 'Iyanapaja',
+      'Ipaja Roundabout', 'Command', 'Abesan Estate', 'Ipaja Market', 'Gowon Estate',
+    ],
+  },
+  {
+    zone: 'Mainland C',
+    fee: 4000,
+    names: [
+      'Igboelerin', 'Iba Ojo', 'Alausa Ikeja', 'Iba Housing Estate', 'Ipaye', 'Iyana School',
+      'Church Pole', 'Adolf', 'Agboroko', 'Abule Egba', 'Agege', 'LASU', 'Post Service LASU',
+      'Mushin', 'Surulere', 'Ogba', 'Ilupeju', 'Ago', 'Okota', 'Meiran', 'Onipan', 'Ayobo',
+      'Ikola Ipaja',
+    ],
+  },
+  {
+    zone: 'Mainland D',
+    fee: 4500,
+    names: [
+      'Fadeyi', 'Shomolu', 'Bariga', 'Gbagada', 'Yaba', 'Palmgroove', 'Bajulaiye', 'Pedro',
+      'Obanikoro', 'Jibowu', 'Herbert Macaulay', 'Unilag', 'Fola Agoro', 'Akoka', 'Oke Ira Ogba',
+      'Ifako Gbagada', 'Abule Ijesha',
+    ],
+  },
+  {
+    zone: 'Mainland E',
+    fee: 5000,
+    names: [
+      'Ebute Metta', 'Oyingbo', 'Railway Compound', 'Maryland', 'Makoko', 'Magodo', 'Ketu Alapere',
+      'Ojota', 'Ogudu', 'Mile 12', 'Oworoshoki', 'Okoko', 'Apapa', 'Alakuko', 'Alagbado',
+      'Iyana Isashi', 'Orile', 'Festac', 'Satellite Town', 'Ojo Barracks', 'Ifako Ijaiye',
+      'Ijaiye Ojokoro', 'Iju Ishaga', 'Ojodu Berger (Lagos Axis)', 'Kayfarm', 'Olowora',
+      'Oke Ira Ebute Metta', 'National Theatre', 'Ajegunle',
+    ],
+  },
 ];
 
-const alphabeticalGroups = [
-  { label: 'A to G', startsWith: 'A', endsWith: 'G' },
-  { label: 'H to M', startsWith: 'H', endsWith: 'M' },
-  { label: 'N to S', startsWith: 'N', endsWith: 'S' },
-  { label: 'T to Z', startsWith: 'T', endsWith: 'Z' },
-];
+const slugify = (value) => value
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-|-$/g, '');
 
-export const deliveryAreaGroups = alphabeticalGroups.map((group) => ({
-  label: group.label,
-  areas: deliveryAreas
-    .filter((area) => area.name.toUpperCase()[0] >= group.startsWith && area.name.toUpperCase()[0] <= group.endsWith)
-    .sort((first, second) => first.name.localeCompare(second.name)),
-}));
+export const deliveryAreas = deliveryZones.flatMap(({ zone, fee, names }) => names.map((name) => ({
+  id: slugify(`${zone} ${name}`),
+  name: name.trim(),
+  fee,
+  zone,
+})));
 
-export { deliveryAreas };
+export const sortedDeliveryAreas = [...deliveryAreas].sort((first, second) => first.name.localeCompare(second.name));

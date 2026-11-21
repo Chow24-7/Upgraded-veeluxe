@@ -167,17 +167,20 @@ async function claimOrderEmails(reference) {
 function sanitizeEmailError(error, order) {
   let message = typeof error?.message === 'string' ? error.message : 'Unknown email error';
   [
+    order.name,
     order.email,
     order.phoneNumber,
     order.address,
     process.env.CONTACT_EMAIL,
+    process.env.EMAIL_FROM,
     process.env.SMTP_USER,
     process.env.SMTP_FROM,
   ].filter(Boolean).forEach((value) => {
     message = message.replaceAll(value, '[redacted]');
   });
   return {
-    code: typeof error?.code === 'string' ? error.code : 'UNKNOWN',
+    name: typeof error?.name === 'string' ? error.name : 'Error',
+    code: typeof error?.code === 'string' ? error.code : typeof error?.name === 'string' ? error.name : 'UNKNOWN',
     message: message.slice(0, 500),
   };
 }
@@ -186,12 +189,14 @@ export async function sendClaimedOrderEmails(order, emailTypes) {
   const orderRef = getOrdersDb().collection('orders').doc(order.reference);
   const requestedEmailTypes = emailTypes || ['business', 'customer'];
   let failedEmails = [];
+  const emailErrors = {};
 
   try {
     const failures = await sendOrderEmails(order, { emailTypes: requestedEmailTypes });
     failedEmails = failures.map((failure) => failure.emailType);
     failures.forEach((failure) => {
       const details = sanitizeEmailError(failure.error, order);
+      emailErrors[failure.emailType] = details;
       console.error('Order email delivery failed', {
         reference: order.reference,
         email: failure.emailType,
@@ -208,15 +213,37 @@ export async function sendClaimedOrderEmails(order, emailTypes) {
       message: details.message,
     });
     failedEmails = requestedEmailTypes;
+    requestedEmailTypes.forEach((type) => {
+      emailErrors[type] = details;
+    });
   }
 
-  const emailStatus = failedEmails.length ? 'failed' : 'sent';
+  let emailStatus = failedEmails.length ? 'failed' : 'sent';
   try {
-    await orderRef.update({
-      emailStatus,
-      emailStatusAt: FieldValue.serverTimestamp(),
-      failedEmails,
-      notificationStatus: emailStatus,
+    await getOrdersDb().runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(orderRef);
+      if (!snapshot.exists) return;
+
+      const existing = snapshot.data();
+      if (existing.emailStatus === 'sent') {
+        emailStatus = 'sent';
+        failedEmails = [];
+        return;
+      }
+
+      const updatedEmailErrors = { ...(existing.emailErrors || {}) };
+      requestedEmailTypes.forEach((type) => {
+        if (emailErrors[type]) updatedEmailErrors[type] = emailErrors[type];
+        else delete updatedEmailErrors[type];
+      });
+
+      transaction.update(orderRef, {
+        emailStatus,
+        emailStatusAt: FieldValue.serverTimestamp(),
+        failedEmails,
+        notificationStatus: emailStatus,
+        emailErrors: updatedEmailErrors,
+      });
     });
   } catch (error) {
     const details = sanitizeEmailError(error, order);

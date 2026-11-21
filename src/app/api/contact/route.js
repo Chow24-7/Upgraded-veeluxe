@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { sendEmail } from '@/lib/mailer';
 import { getClientIp, rateLimit } from '@/lib/rate-limit';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -32,28 +32,26 @@ export async function POST(request) {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: Number(process.env.SMTP_PORT || 587) === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-
-    await transporter.sendMail({
-      from,
+    await sendEmail({
       to: process.env.CONTACT_EMAIL || process.env.SMTP_USER,
+      replyTo: email,
       subject: 'New contact form message',
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
     });
 
     return NextResponse.json({ message: 'Thanks for reaching out. We will reply soon.' });
   } catch (error) {
-    console.error('Contact form email failed:', error);
+    let errorMessage = typeof error?.message === 'string' ? error.message : 'Unknown email error';
+    [name, email, message, process.env.CONTACT_EMAIL, process.env.SMTP_USER, process.env.SMTP_FROM, process.env.EMAIL_FROM]
+      .filter(Boolean)
+      .forEach((value) => {
+        errorMessage = errorMessage.replaceAll(value, '[redacted]');
+      });
+    console.error('Contact form email failed:', {
+      name: typeof error?.name === 'string' ? error.name : 'Error',
+      code: typeof error?.code === 'string' ? error.code : 'UNKNOWN',
+      message: errorMessage.slice(0, 500),
+    });
     return NextResponse.json({ error: 'Unable to send message right now.' }, { status: 500 });
   }
 }

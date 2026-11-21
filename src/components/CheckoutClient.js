@@ -4,13 +4,17 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePaystackPayment } from 'react-paystack';
 import { useStore } from '@/context/StoreProvider';
-import { deliveryAreaGroups, deliveryAreas } from '@/data/delivery';
+import { deliveryAreas, sortedDeliveryAreas } from '@/data/delivery';
 import { normalizeNigerianPhone } from '@/lib/phone';
 
 export default function CheckoutClient() {
   const router = useRouter();
   const { cartItems, clearCart, hydrated } = useStore();
   const [form, setForm] = useState({ name: '', email: '', address: '', phoneNumber: '', deliveryAreaId: '' });
+  const [areaQuery, setAreaQuery] = useState('');
+  const [isAreaListOpen, setIsAreaListOpen] = useState(false);
+  const [activeAreaIndex, setActiveAreaIndex] = useState(0);
+  const [areaNotice, setAreaNotice] = useState('');
   const [paymentError, setPaymentError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -18,12 +22,44 @@ export default function CheckoutClient() {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const selectedDeliveryArea = deliveryAreas.find((area) => area.id === form.deliveryAreaId);
+  const filteredDeliveryAreas = useMemo(() => {
+    const query = areaQuery.trim().toLocaleLowerCase();
+    return sortedDeliveryAreas.filter((area) => (
+      area.name.toLocaleLowerCase().includes(query) || area.zone.toLocaleLowerCase().includes(query)
+    ));
+  }, [areaQuery]);
   const deliveryFee = selectedDeliveryArea?.fee ?? 0;
   const orderTotal = subtotal + deliveryFee;
   const amountKobo = orderTotal * 100;
   const visibleCartItems = hydrated ? cartItems : [];
   const visibleSubtotal = hydrated ? subtotal : 0;
   const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_KEY || '';
+
+  const selectDeliveryArea = (area) => {
+    setForm((current) => ({ ...current, deliveryAreaId: area.id }));
+    setAreaQuery(area.name);
+    setIsAreaListOpen(false);
+    setActiveAreaIndex(0);
+    setAreaNotice('');
+  };
+
+  const handleAreaKeyDown = (event) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setIsAreaListOpen(true);
+      setActiveAreaIndex((current) => Math.min(current + 1, filteredDeliveryAreas.length - 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setIsAreaListOpen(true);
+      setActiveAreaIndex((current) => Math.max(current - 1, 0));
+    } else if (event.key === 'Enter' && isAreaListOpen && filteredDeliveryAreas.length > 0) {
+      event.preventDefault();
+      selectDeliveryArea(filteredDeliveryAreas[activeAreaIndex] || filteredDeliveryAreas[0]);
+    } else if (event.key === 'Escape') {
+      setIsAreaListOpen(false);
+      setAreaQuery(selectedDeliveryArea?.name || '');
+    }
+  };
 
   const config = useMemo(
     () => ({
@@ -53,6 +89,13 @@ export default function CheckoutClient() {
     event.preventDefault();
     if (isProcessing || isVerifying) return;
     setPaymentError('');
+
+    if (form.deliveryAreaId && !selectedDeliveryArea) {
+      setForm((current) => ({ ...current, deliveryAreaId: '' }));
+      setAreaQuery('');
+      setAreaNotice('Your saved delivery area is no longer available. Please choose your area again.');
+      return;
+    }
 
     const normalizedPhoneNumber = normalizeNigerianPhone(form.phoneNumber);
     if (!normalizedPhoneNumber) {
@@ -174,21 +217,64 @@ export default function CheckoutClient() {
               </label>
               <label className="block text-sm font-medium text-[#555]">
                 Delivery area
-                <select
-                  className="mt-1 w-full rounded-lg border border-[#e2d8d3] bg-white px-4 py-3"
-                  value={form.deliveryAreaId}
-                  onChange={(event) => setForm({ ...form, deliveryAreaId: event.target.value })}
-                  required
-                >
-                  <option value="" disabled>Select your delivery area</option>
-                  {deliveryAreaGroups.map((group) => (
-                    <optgroup key={group.label} label={group.label}>
-                      {group.areas.map((area) => (
-                        <option key={area.id} value={area.id}>{area.name}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+                <div className="relative mt-1">
+                  <input
+                    type="text"
+                    role="combobox"
+                    aria-label="Delivery area"
+                    aria-autocomplete="list"
+                    aria-expanded={isAreaListOpen}
+                    aria-controls="delivery-area-options"
+                    aria-activedescendant={isAreaListOpen && filteredDeliveryAreas[activeAreaIndex]
+                      ? `delivery-area-${filteredDeliveryAreas[activeAreaIndex].id}`
+                      : undefined}
+                    autoComplete="off"
+                    className="w-full rounded-lg border border-[#e2d8d3] bg-white px-4 py-3"
+                    placeholder="Search or select your delivery area"
+                    value={isAreaListOpen ? areaQuery : selectedDeliveryArea
+                      ? `${selectedDeliveryArea.name} (N${selectedDeliveryArea.fee.toLocaleString()})`
+                      : areaQuery}
+                    onFocus={() => {
+                      setIsAreaListOpen(true);
+                      setAreaQuery(selectedDeliveryArea?.name || areaQuery);
+                    }}
+                    onBlur={() => setIsAreaListOpen(false)}
+                    onChange={(event) => {
+                      setForm((current) => ({ ...current, deliveryAreaId: '' }));
+                      setAreaQuery(event.target.value);
+                      setActiveAreaIndex(0);
+                      setIsAreaListOpen(true);
+                      setAreaNotice('');
+                    }}
+                    onKeyDown={handleAreaKeyDown}
+                    required={!form.deliveryAreaId}
+                  />
+                  {isAreaListOpen ? (
+                    <div
+                      id="delivery-area-options"
+                      role="listbox"
+                      className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-lg border border-[#e2d8d3] bg-white py-1 shadow-lg"
+                    >
+                      {filteredDeliveryAreas.length ? filteredDeliveryAreas.map((area, index) => (
+                        <div
+                          key={area.id}
+                          id={`delivery-area-${area.id}`}
+                          role="option"
+                          aria-selected={form.deliveryAreaId === area.id}
+                          className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-2 text-sm ${index === activeAreaIndex ? 'bg-[#fff5f0]' : 'hover:bg-[#fff5f0]'}`}
+                          onPointerDown={(event) => event.preventDefault()}
+                          onClick={() => selectDeliveryArea(area)}
+                        >
+                          <span className="min-w-0 break-words">{area.name}</span>
+                          <span className="shrink-0 font-medium text-[#666]">N{area.fee.toLocaleString()}</span>
+                        </div>
+                      )) : (
+                        <p className="px-4 py-3 text-sm text-[#666]">No matching areas. Message us for a quote.</p>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+                {areaNotice ? <span role="status" className="mt-2 block text-xs leading-5 text-[#b94a48]">{areaNotice}</span> : null}
                 <span className="mt-2 block text-xs leading-5 text-[#666]">
                   Can&apos;t find your area?{' '}
                   <a href="https://wa.me/2347014888211" target="_blank" rel="noreferrer" className="font-semibold text-[#ff5722] underline underline-offset-2">
